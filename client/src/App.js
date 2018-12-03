@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import axios from 'axios';
-import CustomMap from './components/customMap';
+import CustomMap from './components/CustomMap';
 
 class App extends Component {
   state  = {

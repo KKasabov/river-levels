@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
-import './customMap.css';
+import './CustomMap.css';
 import marker from '../resources/marker.png';
 import L from 'leaflet';
 
