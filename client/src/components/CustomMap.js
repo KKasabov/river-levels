@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Map, TileLayer, Marker, Popup, withLeaflet } from 'react-leaflet';
 import './CustomMap.css';
+import AddressControl from './AddressControl'
 import marker from '../resources/marker.png';
 import L from 'leaflet';
 
@@ -29,13 +30,14 @@ class CustomMap extends Component {
     var position1 = [51.296461, 1.129525];
     var position2 = [51.27857, 1.0770049];
     var position3 = [51.280064, 1.0733199];
-
+    const AddressSearch = withLeaflet(AddressControl);
     return (
       <Map className="map" center={this.state.cityCenter} zoom={this.state.zoom}>
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+        <AddressSearch />
         <Marker
           position={position1}
           icon={myIcon}
