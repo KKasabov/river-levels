@@ -2,32 +2,52 @@ const express = require('express');
 const app = express();
 
 var ttn = require("ttn");
+var mysql = require("mysql");
 
-var appID = "kentwatersensors"
-var accessKey = "ttn-account-v2.7j6Z9OduNwFW7il2Sd28YYF4Q-8l9rDDPaNRFw06-GM"
+//Get credentials
+var options = require('./options');
 
-var hexPayload;
-var distance;
+var appID = options.storageConfig.appID;
+var accessKey = options.storageConfig.accessKey;
 
-app.listen(5000, () => {
-  console.log('listening on 5000');
-})
+var hexPayload; //distance to water (hex)
+var distance; //distance to water in mm
 
-app.get('/test', (req, res) => {
-  ttn.data(appID, accessKey)
-    .then(function (client) {
-      client.on("uplink", function (devID, payload) {
-        console.log("Received uplink from ", devID)
-        console.log(payload)
-        hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex');
-        distance = parseInt(hexPayload, 16);
-        console.log(hexPayload);
-        console.log(distance);
-      })
+var con = mysql.createConnection({
+  host: options.storageConfig.host,
+  user: options.storageConfig.user,
+  password: options.storageConfig.pwd
+});
+
+//Make sure there is a connection to the database
+con.connect(function(err) {
+  if (err) throw err;
+});
+
+//receive data and add it to a database
+ttn.data(appID, accessKey)
+  .then(function(client) {
+    client.on("uplink", function(devID, payload) {
+
+      console.log("Received uplink from: " + devID);
+      console.log(payload);
+      hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex'); //the distance in hex format
+      distance = parseInt(hexPayload, 16); //the integer value (distance in mm)
+
+      var queryData_Log = {
+        timestamp: payload.timestamp,
+        dev_id: payload.dev_id,
+        distanceToSensor: distance
+      };
+
+      sql = "INSERT INTO ni60.log SET ?";
+      con.query(sql, queryData_Log, function(err, result) {
+        if (err) throw err;
+        console.log("1 record added to the log");
+      });
     })
-    .catch(function (error) {
-      console.error("Error", error)
-      process.exit(1)
-    })
-  res.send(distance)
-})
+  })
+  .catch(function(error) {
+    console.error("Error: ", error)
+    process.exit(1)
+  })
