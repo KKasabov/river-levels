@@ -1,12 +1,6 @@
 {
   "metadata":[
 		{
-			"dev_id": "lairdc0ee4000010109e2",
-			"units": "millimeters",
-			"distance_sensor_from_river_bed": 1440,
-			"distance_flood_plain_from_river_bed": 720
-		},
-		{
 			"dev_id": "lairdc0ee4000010109f3",
 			"units": "millimeters",
 			"distance_sensor_from_river_bed": 1820,
