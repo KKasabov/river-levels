@@ -20,8 +20,22 @@ import Tab from '@material-ui/core/Tab';
 
 class App extends Component {
   state  = {
-    tabIndex: 0
+    tabIndex: 0,
+    timestamps: [],
+    data: []
   }
+
+  // fetch data from our data base
+  getDataFromDb = () => {
+    var that = this;
+    fetch("/api/getData")
+      .then(res => {
+        return res.json();
+      })
+      .then(function(parsedData) {
+        that.setState({ timestamps: parsedData.map(row => row.timestamp), data: parsedData.map(row => row.distanceToSensor) });
+      })
+  };
 
   handleChange = (event, value) => {
    this.setState({ tabIndex: value });
@@ -44,6 +58,7 @@ class App extends Component {
 
 
   componentDidMount() {
+    this.getDataFromDb();
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/measures?parameter=level`)
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/readings?latest`)
     axios.get('http://environment.data.gov.uk/flood-monitoring/id/stations?lat=51.280233&long=1.0789089&dist=5')
@@ -87,7 +102,7 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.tabIndex === 0 && <CustomMap />}
-        {this.state.tabIndex === 1 && <Chart />}
+        {this.state.tabIndex === 1 && <Chart labels={this.state.timestamps} data={this.state.data}/>}
       </div>
     );
   }
