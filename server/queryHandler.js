@@ -5,15 +5,17 @@ var conn = dbConn.getDbConnecton(configArr.host, configArr.user, configArr.pwd);
 
 module.exports = {
   getDataForPeriod: function(dateFrom, dateTo) {
-    var params = [dateFrom, dateTo];
-    sql = "SELECT timestamp, distanceToSensor FROM ni60.log WHERE CAST(timestamp AS DATE) BETWEEN ? AND ?";
-    conn.query(sql, params, function(err, result) {
-      if (err) throw err;
-      return result;
+    return new Promise(function(resolve, reject) {
+      var params = [dateFrom, dateTo];
+      var sql = "SELECT dev_id,timestamp, distanceToSensor FROM ni60.log WHERE CAST(timestamp AS DATE) BETWEEN ? AND ?";
+      conn.query(sql, params, function(err, result) {
+        if (err) return reject(err);
+        resolve(result);
+      });
     });
   },
   insertLogRecord: function(params) {
-    sql = "INSERT INTO ni60.log SET ?";
+    var sql = "INSERT INTO ni60.log SET ?";
     conn.query(sql, params, function(err, result) {
       if (err) throw err;
       console.log("1 record added to the log");
