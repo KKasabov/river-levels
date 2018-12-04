@@ -8,6 +8,10 @@ const sensor_45 = "lairdc0ee400001010945"; //The sensor with id 'lairdc0ee400001
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
+const API_PORT = 8080;
+const app = express();
+const router = express.Router();
+
 var ttn = require("ttn");
 var queryHandler = require('./queryHandler');
 
@@ -27,12 +31,6 @@ request
   .on('response', function(response) {
     // console.log(JSON.stringify(response))
   })
-
-queryHandler.getDataForPeriod('2018-12-03', '2018-12-03').then(function(rows) {
-console.log(rows);
-}).catch((err) => setImmediate(() => {
-  throw err;
-}));
 
 //receive data and add it to a database
 ttn.data(appID, accessKey)
@@ -79,3 +77,19 @@ ttn.data(appID, accessKey)
     console.error("Error: ", error);
     process.exit(1);
   })
+
+// this is our get method
+// this method fetches all available data in our database
+router.get("/getData", (req, res) => {
+  queryHandler.getDataForPeriod('2018-12-03', '2018-12-03').then(function(rows) {
+    res.json(result);
+  }).catch((err) => setImmediate(() => {
+    throw err;
+  }));
+});
+
+// append /api for our http requests
+app.use("/api", router);
+
+// launch our backend into a port
+app.listen(API_PORT, () => console.log(`LISTENING ON PORT ${API_PORT}`));
