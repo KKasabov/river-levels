@@ -1,4 +1,4 @@
-import { Map, TileLayer, Marker, MapControl, Popup, withLeaflet } from "react-leaflet";
+import { MapControl } from "react-leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 
 class AddressControl extends MapControl {
