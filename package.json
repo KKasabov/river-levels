@@ -7,7 +7,7 @@
     "client": "cd client && npm start",
     "server": "cd server && npm run dev",
     "start": "concurrently \"npm run server\" \"npm run client\""
-   },
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nikkkola/co657-a3.git"
