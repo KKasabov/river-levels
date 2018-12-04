@@ -28,12 +28,18 @@ request
     // console.log(JSON.stringify(response))
   })
 
+queryHandler.getDataForPeriod('2018-12-03', '2018-12-03').then(function(rows) {
+console.log(rows);
+}).catch((err) => setImmediate(() => {
+  throw err;
+}));
+
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
     client.on("uplink", function(devID, payload) {
       console.log("Received uplink from: " + devID);
-      console.log(payload);
+      // console.log(payload);
       hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex'); //the distance in hex format
       distance = parseInt(hexPayload, 16); //the integer value (distance in mm)
 
@@ -54,6 +60,7 @@ ttn.data(appID, accessKey)
       //TODO handle the 300mm difference
       if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
         console.log('SHIIT FLOOD GET THE BOAT');
+        floodAlert = true;
       } else {
         console.log('NO flood');
       }
@@ -63,10 +70,12 @@ ttn.data(appID, accessKey)
         dev_id: devID,
         distanceToSensor: distance
       };
+
       queryHandler.insertLogRecord(params);
-    })
+      floodAlert = false;
+    });
   })
   .catch(function(error) {
-    console.error("Error: ", error)
-    process.exit(1)
+    console.error("Error: ", error);
+    process.exit(1);
   })
