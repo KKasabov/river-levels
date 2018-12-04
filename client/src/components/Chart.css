@@ -1,0 +1,12 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  align-content: space-between;
+}
+
+canvas {
+  width: 75% !important;
+  height: 75% !important;
+}

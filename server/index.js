@@ -79,8 +79,8 @@ ttn.data(appID, accessKey)
 
 // this is our get method
 // this method fetches all available data in our database
-router.get("/getData", (req, res) => {
-  queryHandler.getDataForPeriod(sensor_45,'2018-12-03', '2018-12-03').then(function(rows) {
+router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
+  queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
     res.json(rows);
   }).catch((err) => setImmediate(() => {
     throw err;
