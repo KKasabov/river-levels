@@ -18,24 +18,13 @@ import NotificationsIcon from '@material-ui/icons/Notifications';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
+const sensor_f3 = "lairdc0ee4000010109f3"; //The sensor with id 'lairdc0ee4000010109f3'
+const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001012345'
+
 class App extends Component {
   state  = {
-    tabIndex: 0,
-    timestamps: [],
-    data: []
+    tabIndex: 0
   }
-
-  // fetch data from our data base
-  getDataFromDb = () => {
-    var that = this;
-    fetch("/api/getData")
-      .then(res => {
-        return res.json();
-      })
-      .then(function(parsedData) {
-        that.setState({ timestamps: parsedData.map(row => row.timestamp), data: parsedData.map(row => row.distanceToSensor) });
-      })
-  };
 
   handleChange = (event, value) => {
    this.setState({ tabIndex: value });
@@ -58,7 +47,6 @@ class App extends Component {
 
 
   componentDidMount() {
-    this.getDataFromDb();
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/measures?parameter=level`)
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/readings?latest`)
     axios.get('http://environment.data.gov.uk/flood-monitoring/id/stations?lat=51.280233&long=1.0789089&dist=5')
@@ -75,7 +63,6 @@ class App extends Component {
     // console.log(this.state.floodData.it[0].latestReading.dateTime);
     return (
       <div className="root">
-        <CssBaseline />
         <AppBar
           position="static"
         >
@@ -102,7 +89,12 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.tabIndex === 0 && <CustomMap />}
-        {this.state.tabIndex === 1 && <Chart labels={this.state.timestamps} data={this.state.data}/>}
+        {this.state.tabIndex === 1 &&
+          <div>
+            <Chart sensorId={sensor_f3}/>
+            <Chart sensorId={sensor_45}/>
+          </div>
+        }
       </div>
     );
   }
