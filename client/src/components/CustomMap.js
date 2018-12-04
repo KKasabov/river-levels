@@ -19,7 +19,7 @@ class CustomMap extends Component {
     cityCenter: [51.2802, 1.0789],
     zoom: 12,
   }
-  
+
   mapRef = createRef()
 
   handleLocationFound = (e: Object) => {
@@ -46,6 +46,7 @@ class CustomMap extends Component {
         onLocationfound={this.handleLocationFound}
         zoomControl={false}>
         <ZoomControl position="topleft" />
+        <AddressSearch />
         <LayersControl position="topright">
           <BaseLayer checked name="Colour">
             <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -83,8 +84,6 @@ class CustomMap extends Component {
             </LayerGroup>
           </Overlay>
         </LayersControl>
-        <AddressSearch />
-
       </Map>
     )
   }

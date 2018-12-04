@@ -7,7 +7,7 @@ module.exports = {
   getDataForPeriod: function(dateFrom, dateTo) {
     return new Promise(function(resolve, reject) {
       var params = [dateFrom, dateTo];
-      var sql = "SELECT dev_id,timestamp, distanceToSensor FROM ni60.log WHERE CAST(timestamp AS DATE) BETWEEN ? AND ?";
+      var sql = "SELECT timestamp, distanceToSensor FROM ni60.log WHERE CAST(timestamp AS DATE) BETWEEN ? AND ?";
       conn.query(sql, params, function(err, result) {
         if (err) return reject(err);
         resolve(result);

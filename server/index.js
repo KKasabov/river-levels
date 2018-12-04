@@ -1,6 +1,5 @@
 const request = require('request');
 const express = require('express');
-const app = express();
 const sensor_f3 = "lairdc0ee4000010109f3"; //The sensor with id 'lairdc0ee4000010109f3'
 const distance_sensor_from_river_bed_sensor_f3 = 1820;
 const distance_flood_plain_from_river_bed_sensor_f3 = 1820;
@@ -82,7 +81,7 @@ ttn.data(appID, accessKey)
 // this method fetches all available data in our database
 router.get("/getData", (req, res) => {
   queryHandler.getDataForPeriod('2018-12-03', '2018-12-03').then(function(rows) {
-    res.json(result);
+    res.json(rows);
   }).catch((err) => setImmediate(() => {
     throw err;
   }));

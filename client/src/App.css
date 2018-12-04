@@ -8,6 +8,10 @@ body {
   height: 100%;
 }
 
+.grow {
+  height: 10vh;
+}
+
 /* global styling */
 .leaflet-control-geosearch *,
 .leaflet-control-geosearch *:before,
