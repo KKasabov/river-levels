@@ -21,24 +21,9 @@ var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-//TODO figure out what to pull from gov data below - sort of on the right track as of 4/12
-var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
-
-/**
- * Returns the closest n (noOfResults) stations of a given type (sensorType
- * ("level" for water level stations
- *  "rainfall" for rainfall stations))
- * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
- * NB: the 'request' package supports HTTPS and follows redirects by default :-)
- *
- * @param  {long} latitude      Geographical latitude
- * @param  {long} longitude     Geographical longitude
- * @param  {int} radius         The radius to look for sensors in
- * @param  {String} sensorType  The type of the sensor - level /rainfall)
- * @param  {int} noOfResults    The requested number of closest stations
- * @return {array}              The closest n stations
- */
-function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
+//TODO figure out what to pull from gov data below
+//the 'request' package supports HTTPS and follows redirects by default :-)
+function getNearestGovSensor() {
   request
     .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
     .on('data', function(data) {
@@ -73,9 +58,7 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       return closest.slice(0, noOfResults);
     })
 }
-//NOTE EXAMPLE:
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-
+getNearestGovSensor();
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
@@ -124,8 +107,8 @@ ttn.data(appID, accessKey)
 
 // this is our get method
 // this method fetches all available data in our database
-router.get("/getData", (req, res) => {
-  queryHandler.getDataForPeriod(sensor_45, '2018-12-03', '2018-12-03').then(function(rows) {
+router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
+  queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
     res.json(rows);
   }).catch((err) => setImmediate(() => {
     throw err;

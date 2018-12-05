@@ -1,18 +1,52 @@
 import React, { Component } from 'react';
 import './Chart.css';
 import RC2 from 'react-chartjs2';
+import 'react-dates/initialize';
+import { DateRangePicker } from 'react-dates';
+import 'react-dates/lib/css/_datepicker.css';
 
 class Chart extends Component {
-  constructor(props) {
-    super(props);
+  state  = {
+    startDate: null,
+    endDate: null,
+    focusedInput: null,
+    labels: [],
+    data: []
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    if(this.state.startDate !== null && this.state.endDate !== null) {
+      if (this.state.startDate !== prevState.startDate || this.state.endDate !== prevState.endDate) {
+        this.getDataFromDb(this.state.startDate.format(), this.state.endDate.format());
+      }
+    }
+  }
+
+  // fetch data from our data base
+  getDataFromDb = (startDate, endDate) => {
+    var that = this;
+    fetch("/api/getData/" + this.props.sensorId + "/" + startDate + "/" + endDate)
+      .then(res => {
+        console.log("response");
+        return res.json();
+      })
+      .then(function(parsedData) {
+        console.log(parsedData);
+        let timestamp;
+        parsedData.forEach(row => {
+          timestamp = new Date(row.timestamp);
+          row.timestamp = [timestamp.toLocaleDateString(), timestamp.toLocaleTimeString()];
+        });
+        that.setState({ labels: parsedData.map(row => row.timestamp), data: parsedData.map(row => row.distanceToSensor) });
+      })
+  };
 
   render() {
     let chartData = {
-      labels: this.props.labels,
+      labels: this.state.labels,
       datasets: [
         {
-          label: 'My First dataset',
+          label: this.props.sensorId,
           fill: false,
           lineTension: 0.1,
           backgroundColor: 'rgba(75,192,192,0.4)',
@@ -30,12 +64,42 @@ class Chart extends Component {
           pointHoverBorderWidth: 2,
           pointRadius: 1,
           pointHitRadius: 10,
-          data: this.props.data,
+          data: this.state.data,
         }
       ]
     };
 
-    return (<RC2 data={chartData} type='line' />);
+    let options = {
+      responsive: true,
+      scales: {
+        yAxes: [{
+            ticks: {
+                fontSize: 20
+            }
+        }],
+        xAxes: [{
+            ticks: {
+                fontSize: 20
+            }
+        }]
+    }
+    };
+
+    return (
+      <div className="container">
+        <DateRangePicker
+          startDate = {this.state.startDate} // momentPropTypes.momentObj or null,
+          startDateId = "myStartDateId" // PropTypes.string.isRequired,
+          endDate = {this.state.endDate} // momentPropTypes.momentObj or null,
+          endDateId = "myEndDateId" // PropTypes.string.isRequired,
+          onDatesChange = {({ startDate, endDate }) => this.setState({ startDate, endDate })} // PropTypes.func.isRequired,
+          focusedInput = {this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
+          onFocusChange = {focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
+          isOutsideRange = {() => false}
+        />
+        <RC2 data={chartData} options={options} type='line' />
+      </div>
+    );
   }
 }
 

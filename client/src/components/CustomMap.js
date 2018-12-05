@@ -2,12 +2,12 @@ import React, { createRef, Component } from 'react';
 import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet } from 'react-leaflet';
 import './CustomMap.css';
 import AddressControl from './AddressControl'
-import marker from '../resources/marker.png';
+import sensorMarker from '../resources/sensorMarker.png';
 import L from 'leaflet';
 
 var myIcon = L.icon({
-  iconUrl: marker,
-  iconSize: [25, 41],
+  iconUrl: sensorMarker,
+  iconSize: [41, 41],
   iconAchor: [22, 94],
   popupAnchor: [0, -10]
 });
@@ -15,15 +15,29 @@ var myIcon = L.icon({
 const { BaseLayer, Overlay } = LayersControl
 
 class CustomMap extends Component {
-  state = {
-    cityCenter: [51.2802, 1.0789],
-    zoom: 12,
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      cityCenter: [51.2802, 1.0789],
+      zoom: 12,
+      searchRef: createRef(),
+      mapRef: createRef()
+    }
   }
 
-  mapRef = createRef()
 
-  handleLocationFound = (e: Object) => {
-    console.log(e);
+
+  componentDidMount() {
+
+  }
+
+  componentDidUpdate() {
+
+  }
+
+  componentWillUnmount() {
+    
   }
 
   render() {
@@ -42,11 +56,10 @@ class CustomMap extends Component {
         maxZoom="19"
         center={this.state.cityCenter}
         zoom={this.state.zoom}
-        ref={this.mapRef}
-        onLocationfound={this.handleLocationFound}
+        ref={this.state.mapRef}
         zoomControl={false}>
         <ZoomControl position="topleft" />
-        <AddressSearch />
+        <AddressSearch ref={this.state.searchRef}/>
         <LayersControl position="topright">
           <BaseLayer checked name="Colour">
             <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
