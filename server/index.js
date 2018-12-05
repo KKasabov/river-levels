@@ -50,8 +50,6 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
           locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
         }
       }
-      console.log(sensorType + " sensors within " + radius + "km: ");
-      console.log(locationsMap);
       var distancesMap = {};
       Object.keys(locationsMap).forEach(function(key) {
         var result = geoLib.distance([
@@ -61,8 +59,6 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
         distancesMap[key] = distancesMap[key] || [];
         distancesMap[key].push(result.distance);
       });
-      console.log("Distances from given coordinates");
-      console.log(distancesMap);
       var sortedDistances = [];
       for (var distance in distancesMap) {
         sortedDistances.push([distance, distancesMap[distance]]);
@@ -70,14 +66,10 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       sortedDistances.sort(function(a, b) {
         return a[1] - b[1];
       });
-      console.log("Distances sorted");
-      console.log(sortedDistances);
       var closest = [];
       for (var i = 0; i < sortedDistances.length; i++) {
         closest.push(sortedDistances[i][0]);
       }
-      console.log("Closest " + noOfResults + " sensor(s): ");
-      console.log(closest.slice(0, noOfResults));
       return closest.slice(0, noOfResults);
     })
 }
