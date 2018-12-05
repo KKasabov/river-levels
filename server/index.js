@@ -1,3 +1,21 @@
+Skip to content
+
+Search or jump to…
+
+Pull requests
+Issues
+Marketplace
+Explore
+ @KKasabov Sign out
+1
+0 0 nikkkola/co657-a3
+ Code  Issues 0  Pull requests 0  Projects 0  Wiki  Insights
+co657-a3/server/index.js
+50bc3b1  21 hours ago
+@KKasabov KKasabov Added getLatestReading()
+@KKasabov @nikkkola
+
+157 lines (132 sloc)  5.55 KB
 const request = require('request');
 const express = require('express');
 const app = express();
@@ -21,16 +39,76 @@ var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-//TODO figure out what to pull from gov data below
-//the 'request' package supports HTTPS and follows redirects by default :-)
-function getNearestGovSensor() {
+//TODO figure out what to pull from gov data below - sort of on the right track as of 4/12
+
+
+
+var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
+
+/**
+ * Returns the closest n (noOfResults) stations of a given type (sensorType
+ * ("level" for water level stations
+ *  "rainfall" for rainfall stations))
+ * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
+ * NB: the 'request' package supports HTTPS and follows redirects by default :-)
+ *
+ * @param  {long} latitude      Geographical latitude
+ * @param  {long} longitude     Geographical longitude
+ * @param  {int} radius         The radius to look for sensors in
+ * @param  {String} sensorType  The type of the sensor - level /rainfall)
+ * @param  {int} noOfResults    The requested number of closest stations
+ * @return {array}              The closest n stations
+ */
+function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
   request
-    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=51.280233&long=1.0789089&dist=5')
-    .on('response', function(response) {
-      // console.log(response)
+    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
+    .on('data', function(data) {
+      var sensors = JSON.parse(data).items;
+      var locationsMap = {};
+      for (var i = 0; i < sensors.length; i++) {
+        if (sensors[i].measures[0].parameter == sensorType) {
+          locationsMap[sensors[i].notation] = locationsMap[sensors[i].notation] || [];
+          locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
+        }
+      }
+      var distancesMap = {};
+      Object.keys(locationsMap).forEach(function(key) {
+        var result = geoLib.distance([
+          [latitude, longitude],
+          [locationsMap[key][0], locationsMap[key][1]]
+        ]);
+        distancesMap[key] = distancesMap[key] || [];
+        distancesMap[key].push(result.distance);
+      });
+      var sortedDistances = [];
+      for (var distance in distancesMap) {
+        sortedDistances.push([distance, distancesMap[distance]]);
+      }
+      sortedDistances.sort(function(a, b) {
+        return a[1] - b[1];
+      });
+      var closest = [];
+      for (var i = 0; i < sortedDistances.length; i++) {
+        closest.push(sortedDistances[i][0]);
+      }
+      return closest.slice(0, noOfResults);
     })
 }
-getNearestGovSensor();
+//NOTE EXAMPLE:
+
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
+
+//TODO write a function which gets the latest data from a given gov sensor
+
+//get the latest reading for a given sensor
+queryHandler.getLatestReading(sensor_45).then(function(rows) {
+  console.log("Latest reading is " +
+    rows[0].distanceToSensor + " from " + rows[0].timestamp);
+}).catch((err) => setImmediate(() => {
+  throw err;
+})); // Throw async to escape the promise chain
+
+
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
@@ -77,21 +155,33 @@ ttn.data(appID, accessKey)
     process.exit(1);
   })
 
-// this is our get method
-// this method fetches all available data in our database
-router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
-  let funCall = ((!req.params.startDate || !req.params.endDate)
-                  ? queryHandler.getLatestReading(req.params.deviceId)
-                  : queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
-  funCall.then(function(rows) {
+
+// fetches all available data in the database
+router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
+  queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
     res.json(rows);
   }).catch((err) => setImmediate(() => {
     throw err;
   }));
 });
 
+
+
 // append /api for our http requests
 app.use("/api", router);
 
 // launch our backend into a port
 app.listen(API_PORT, () => console.log(`LISTENING ON PORT ${API_PORT}`));
+© 2018 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
