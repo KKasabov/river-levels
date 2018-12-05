@@ -120,7 +120,7 @@ class CustomMap extends Component {
         <ZoomControl position="topleft" />
         <AddressSearch />
         <LayersControl position="topright">
-          <BaseLayer checked={this.props.isColorBlind} name="Colour">
+          <BaseLayer checked={!this.props.isColorBlind} name="Colour">
             <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           </BaseLayer>
           <BaseLayer checked={this.props.isColorBlind} name="Black And White">

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import './App.css';
 import axios from 'axios';
 import CustomMap from './components/CustomMap';
+import CurrentRiverLevelPage from './components/CurrentRiverLevelPage';
 import Chart from './components/Chart';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -23,6 +24,7 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 
 class App extends Component {
   state  = {
+    currentLocation: [],
     tabIndex: 0,
     sensor_f3_reading: "",
     sensor_45_reading: ""
@@ -78,6 +80,7 @@ class App extends Component {
   render() {
     return (
       <div className="root">
+        <CssBaseline />
         <AppBar
           position="static"
         >
@@ -92,9 +95,10 @@ class App extends Component {
               Dashboard
             </Typography>
             <Tabs value={this.state.tabIndex} onChange={this.handleChange}>
-              <Tab label="Item One" />
-              <Tab label="Item Two" />
-              <Tab label="Item Three" />
+              <Tab label="Home" />
+              <Tab label="Current River Level" />
+              <Tab label="Predicted River Levels" />
+              <Tab label="Historical Data" />
             </Tabs>
             <IconButton color="inherit">
               <Badge badgeContent={4} color="secondary">
@@ -103,11 +107,16 @@ class App extends Component {
             </IconButton>
           </Toolbar>
         </AppBar>
-        {this.state.tabIndex === 0 && <CustomMap sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading}/>}
-        {this.state.tabIndex === 1 &&
+        {this.state.tabIndex === 0 && <CustomMap sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading} isColorBlind={false}/>}
+        {this.state.tabIndex === 3 &&
           <div>
             <Chart sensorId={sensor_f3}/>
             <Chart sensorId={sensor_45}/>
+          </div>
+        }
+        {this.state.tabIndex === 1 &&
+          <div>
+            <CurrentRiverLevelPage sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading}/>
           </div>
         }
       </div>

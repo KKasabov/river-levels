@@ -1,4 +1,5 @@
-const request = require('request');
+// const request = require('request');
+const request = require('request-promise');
 const express = require('express');
 const app = express();
 const API_PORT = 8080;
@@ -20,10 +21,6 @@ var accessKey = options.storageConfig.accessKey;
 var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
-
-//TODO figure out what to pull from gov data below - sort of on the right track as of 4/12
-
-
 
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
@@ -79,18 +76,6 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
 //NOTE EXAMPLE:
 
 getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-
-//TODO write a function which gets the latest data from a given gov sensor
-
-//get the latest reading for a given sensor
-queryHandler.getLatestReading(sensor_45).then(function(rows) {
-  console.log("Latest reading is " +
-    rows[0].distanceToSensor + " from " + rows[0].timestamp);
-}).catch((err) => setImmediate(() => {
-  throw err;
-})); // Throw async to escape the promise chain
-
-
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
@@ -137,17 +122,59 @@ ttn.data(appID, accessKey)
     process.exit(1);
   })
 
+// function to extract coordinates from polygon objects
+function getPolygonData(urls) {
+  let polygonCoordinates = [];
+  // map all urls to async requests
+  var promises = urls.map(url => request(url, { json: true }));
+  // return an array of promises
+  return Promise.all(promises)
+    .then((data) => {
+      // extract and put coordinates into array
+      data.forEach(promise => {
+        polygonCoordinates.push(promise.features[0].geometry.coordinates);
+      })
+      return polygonCoordinates;
+    });
+}
 
-// fetches all available data in the database
-router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
-  queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
+// this is our get method
+// this method fetches all available data in our database
+router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
+  // if start and end date have not been passed as parameters
+  // then we need to return the latest reading
+  let funCall = ((!req.params.startDate || !req.params.endDate)
+                  ? queryHandler.getLatestReading(req.params.deviceId)
+                  : queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
+  funCall.then(function(rows) {
     res.json(rows);
-  }).catch((err) => setImmediate(() => {
+  })
+  .catch((err) => setImmediate(() => {
     throw err;
   }));
 });
 
-
+// this returns all flood areas polygon coordinates from the EA API
+// *probably needs renaming*
+router.get("/getAreas", (req, res) => {
+  var areasURLs = []; // array to put all polygon coordinates in
+  request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', { json: true })
+    .then(function(body) {
+      // extract polygon objects from response
+      body.items.forEach(area => {
+        areasURLs.push(area.polygon);
+      })
+      // this returns a to promise for the next then callback
+      return getPolygonData(areasURLs);
+    })
+    .then(data => {
+      // return an array of multipolygon coordinates
+      res.json(data);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
+});
 
 // append /api for our http requests
 app.use("/api", router);
