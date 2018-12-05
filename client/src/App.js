@@ -23,12 +23,26 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 
 class App extends Component {
   state  = {
-    tabIndex: 0
+    tabIndex: 0,
+    sensor_f3_reading: "",
+    sensor_45_reading: ""
   }
 
   handleChange = (event, value) => {
    this.setState({ tabIndex: value });
   };
+
+  getSensorReading = (deviceName) => {
+    var that = this;
+    let deviceId = ((deviceName === 'sensor_f3') ? sensor_f3 : sensor_45);
+    fetch("/api/getData/" + deviceId)
+      .then(res => {
+        return res.json();
+      })
+      .then(function(parsedData) {
+        that.setState({[deviceName + "_reading"]: parsedData[0].distanceToSensor});
+      })
+  }
 
   // Redirects. At times of high load or in future versions of this API the service may redirect to an alternative URL.
   // Client code should be written so as to follow standard HTTP redirects.
@@ -47,6 +61,8 @@ class App extends Component {
 
 
   componentDidMount() {
+    this.getSensorReading('sensor_f3');
+    this.getSensorReading('sensor_45');
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/measures?parameter=level`)
     // axios.get(`https://environment.data.gov.uk/flood-monitoring/id/stations/E3826/readings?latest`)
     axios.get('http://environment.data.gov.uk/flood-monitoring/id/stations?lat=51.280233&long=1.0789089&dist=5')
@@ -60,7 +76,6 @@ class App extends Component {
   }
 
   render() {
-    // console.log(this.state.floodData.it[0].latestReading.dateTime);
     return (
       <div className="root">
         <AppBar
@@ -88,7 +103,7 @@ class App extends Component {
             </IconButton>
           </Toolbar>
         </AppBar>
-        {this.state.tabIndex === 0 && <CustomMap />}
+        {this.state.tabIndex === 0 && <CustomMap sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading}/>}
         {this.state.tabIndex === 1 &&
           <div>
             <Chart sensorId={sensor_f3}/>

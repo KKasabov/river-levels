@@ -15,29 +15,29 @@ var myIcon = L.icon({
 const { BaseLayer, Overlay } = LayersControl
 
 class CustomMap extends Component {
-
   constructor(props) {
     super(props);
     this.state = {
       cityCenter: [51.2802, 1.0789],
-      zoom: 12,
-      searchRef: createRef(),
-      mapRef: createRef()
+      zoom: 12
     }
   }
 
 
 
   componentDidMount() {
-
+    console.log(this.refs.map.leafletElement);
+    this.refs.map.leafletElement.on('move', e => {
+      console.log(e.target._animateToCenter);
+    });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
 
   }
 
   componentWillUnmount() {
-    
+
   }
 
   render() {
@@ -56,10 +56,10 @@ class CustomMap extends Component {
         maxZoom="19"
         center={this.state.cityCenter}
         zoom={this.state.zoom}
-        ref={this.state.mapRef}
+        ref='map'
         zoomControl={false}>
         <ZoomControl position="topleft" />
-        <AddressSearch ref={this.state.searchRef}/>
+        <AddressSearch />
         <LayersControl position="topright">
           <BaseLayer checked name="Colour">
             <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -82,7 +82,7 @@ class CustomMap extends Component {
                 icon={myIcon}
                 >
                 <Popup>
-                  READING2
+                  {this.props.sensor_f3_reading}
                 </Popup>
               </Marker>
 
@@ -91,7 +91,7 @@ class CustomMap extends Component {
                 icon={myIcon}
                 >
                 <Popup>
-                  READING3
+                  {this.props.sensor_45_reading}
                 </Popup>
               </Marker>
             </LayerGroup>
