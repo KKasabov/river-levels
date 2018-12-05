@@ -22,16 +22,60 @@ var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-//TODO figure out what to pull from gov data below
-//the 'request' package supports HTTPS and follows redirects by default :-)
-function getNearestGovSensor() {
+var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
+
+/**
+ * Returns the closest n (noOfResults) stations of a given type (sensorType
+ * ("level" for water level stations
+ *  "rainfall" for rainfall stations))
+ * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
+ * NB: the 'request' package supports HTTPS and follows redirects by default :-)
+ *
+ * @param  {long} latitude      Geographical latitude
+ * @param  {long} longitude     Geographical longitude
+ * @param  {int} radius         The radius to look for sensors in
+ * @param  {String} sensorType  The type of the sensor - level /rainfall)
+ * @param  {int} noOfResults    The requested number of closest stations
+ * @return {array}              The closest n stations
+ */
+function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
   request
-    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=51.280233&long=1.0789089&dist=5')
-    .on('response', function(response) {
-      // console.log(response)
+    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
+    .on('data', function(data) {
+      var sensors = JSON.parse(data).items;
+      var locationsMap = {};
+      for (var i = 0; i < sensors.length; i++) {
+        if (sensors[i].measures[0].parameter == sensorType) {
+          locationsMap[sensors[i].notation] = locationsMap[sensors[i].notation] || [];
+          locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
+        }
+      }
+      var distancesMap = {};
+      Object.keys(locationsMap).forEach(function(key) {
+        var result = geoLib.distance([
+          [latitude, longitude],
+          [locationsMap[key][0], locationsMap[key][1]]
+        ]);
+        distancesMap[key] = distancesMap[key] || [];
+        distancesMap[key].push(result.distance);
+      });
+      var sortedDistances = [];
+      for (var distance in distancesMap) {
+        sortedDistances.push([distance, distancesMap[distance]]);
+      }
+      sortedDistances.sort(function(a, b) {
+        return a[1] - b[1];
+      });
+      var closest = [];
+      for (var i = 0; i < sortedDistances.length; i++) {
+        closest.push(sortedDistances[i][0]);
+      }
+      return closest.slice(0, noOfResults);
     })
 }
-//getNearestGovSensor();
+//NOTE EXAMPLE:
+
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
