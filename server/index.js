@@ -21,9 +21,27 @@ var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-//TODO figure out what to pull from gov data below
-//the 'request' package supports HTTPS and follows redirects by default :-)
-function getNearestGovSensor() {
+//TODO figure out what to pull from gov data below - sort of on the right track as of 4/12
+
+
+
+var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
+
+/**
+ * Returns the closest n (noOfResults) stations of a given type (sensorType
+ * ("level" for water level stations
+ *  "rainfall" for rainfall stations))
+ * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
+ * NB: the 'request' package supports HTTPS and follows redirects by default :-)
+ *
+ * @param  {long} latitude      Geographical latitude
+ * @param  {long} longitude     Geographical longitude
+ * @param  {int} radius         The radius to look for sensors in
+ * @param  {String} sensorType  The type of the sensor - level /rainfall)
+ * @param  {int} noOfResults    The requested number of closest stations
+ * @return {array}              The closest n stations
+ */
+function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
   request
     .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
     .on('data', function(data) {
@@ -58,7 +76,21 @@ function getNearestGovSensor() {
       return closest.slice(0, noOfResults);
     })
 }
-getNearestGovSensor();
+//NOTE EXAMPLE:
+
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
+
+//TODO write a function which gets the latest data from a given gov sensor
+
+//get the latest reading for a given sensor
+queryHandler.getLatestReading(sensor_45).then(function(rows) {
+  console.log("Latest reading is " +
+    rows[0].distanceToSensor + " from " + rows[0].timestamp);
+}).catch((err) => setImmediate(() => {
+  throw err;
+})); // Throw async to escape the promise chain
+
+
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
@@ -105,8 +137,8 @@ ttn.data(appID, accessKey)
     process.exit(1);
   })
 
-// this is our get method
-// this method fetches all available data in our database
+
+// fetches all available data in the database
 router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
   queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
     res.json(rows);
@@ -114,6 +146,8 @@ router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
     throw err;
   }));
 });
+
+
 
 // append /api for our http requests
 app.use("/api", router);
