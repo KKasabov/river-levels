@@ -19,17 +19,15 @@ class CustomMap extends Component {
     super(props);
     this.state = {
       cityCenter: [51.2802, 1.0789],
-      zoom: 12
+      zoom: 12,
+      polygonCoordinates: []
     }
   }
 
 
 
   componentDidMount() {
-    console.log(this.refs.map.leafletElement);
-    this.refs.map.leafletElement.on('move', e => {
-      console.log(e.target._animateToCenter);
-    });
+    this.getPolygonCoordinates();
   }
 
   componentDidUpdate(prevProps) {
@@ -39,6 +37,19 @@ class CustomMap extends Component {
   componentWillUnmount() {
 
   }
+
+  // fetch data from our data base
+  getPolygonCoordinates = () => {
+    var that = this;
+    fetch("/api/getAreas/")
+      .then(res => {
+        console.log("response");
+        return res.json();
+      })
+      .then(function(parsedData) {
+        that.setState({ polygonCoordinates: parsedData });
+      })
+  };
 
   render() {
     // var position1 = [this.props.lat1, this.props.lng1];
