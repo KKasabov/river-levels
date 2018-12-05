@@ -1,21 +1,3 @@
-Skip to content
-
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
- @KKasabov Sign out
-1
-0 0 nikkkola/co657-a3
- Code  Issues 0  Pull requests 0  Projects 0  Wiki  Insights
-co657-a3/server/index.js
-50bc3b1  21 hours ago
-@KKasabov KKasabov Added getLatestReading()
-@KKasabov @nikkkola
-
-157 lines (132 sloc)  5.55 KB
 const request = require('request');
 const express = require('express');
 const app = express();
