@@ -21,11 +21,17 @@ var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-//TODO figure out what to pull from gov data below - sort of on the right track as of 4/12
-
-
-
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
+
+function getLatestData(stationReference) {
+  request
+    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/measures')
+    .on('data', function(data) {
+      var sensorData = JSON.parse(data).items[0].latestReading.value;
+      // console.log(sensorData);
+      return sensorData;
+    });
+}
 
 /**
  * Returns the closest n (noOfResults) stations of a given type (sensorType
@@ -53,6 +59,7 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
           locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
         }
       }
+
       var distancesMap = {};
       Object.keys(locationsMap).forEach(function(key) {
         var result = geoLib.distance([
@@ -69,21 +76,24 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       sortedDistances.sort(function(a, b) {
         return a[1] - b[1];
       });
-      var closest = [];
+      var stations = [];
       for (var i = 0; i < sortedDistances.length; i++) {
-        closest.push(sortedDistances[i][0]);
+        stations.push(sortedDistances[i][0]);
       }
-      return closest.slice(0, noOfResults);
-    })
+
+      stations.slice(0, noOfResults);
+    });
 }
 //NOTE EXAMPLE:
 
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-
+var x = getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
+console.log(x);
+var y = getLatestData('E3826');
+console.log(y);
 //TODO write a function which gets the latest data from a given gov sensor
 
 //get the latest reading for a given sensor
-queryHandler.getLatestReading(sensor_45).then(function(rows) {
+queryHandler.getLatestReading(sensor_f3).then(function(rows) {
   console.log("Latest reading is " +
     rows[0].distanceToSensor + " from " + rows[0].timestamp);
 }).catch((err) => setImmediate(() => {
