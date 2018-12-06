@@ -12,7 +12,6 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
-var ttn = require("ttn");
 var queryHandler = require('./queryHandler');
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
