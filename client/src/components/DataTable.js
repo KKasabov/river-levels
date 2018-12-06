@@ -21,24 +21,36 @@ const CustomTableCell = withStyles(theme => ({
 
 class DataTable extends Component {
 
+  // create column jsx for given number of columns
   createColumns(num, titles) {
-    let jsx;
+    let jsx = [];
     for(var i = 0; i < num; i++) {
-      jsx += (<CustomTableCell>{titles[i]}</CustomTableCell>);
+      jsx.push(<CustomTableCell>{titles[i]}</CustomTableCell>);
     }
     return jsx;
   }
 
+  // create all rows
   createRows(data) {
-    // let jsx = [];
-    // data.map(row => {
-    //   jsx.push(<TableRow className="row" key={row.id}/>);
-    //   for(var i = 0; i < data.length; i++) {
-    //     jsx.push(<CustomTableCell {...((i==0) ? {component:"th"} : {})} {...((i==0) ? {scope:"row"} : {})}>{data[i]}</CustomTableCell>);
-    //   }
-    //   jsx += (</TableRow>);
-    // });
-    // return jsx;
+    let jsx = [];
+    data.forEach(row => {
+      jsx.push(<TableRow className="row" key={row.id}>{this.createRowContent(row)}</TableRow>);
+
+    });
+    return jsx;
+  }
+
+  // create the content of cells in a single row
+  createRowContent(rowData) {
+    let jsx = [];
+    for(var i = 0; i < rowData.length; i++) {
+      jsx.push(
+        <CustomTableCell {...((i == 0) ? {component: "th"} : {})} {...((i == 0) ? {scope:"row"} : {})}>
+          {rowData[i]}
+        </CustomTableCell>
+      );
+    }
+    return jsx;
   }
 
   render() {

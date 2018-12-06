@@ -116,7 +116,12 @@ class App extends Component {
         }
         {this.state.tabIndex === 1 &&
           <div>
-            <CurrentRiverLevelPage sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading}/>
+            <CurrentRiverLevelPage
+              sensorReadings={[
+                {"sensorID": sensor_f3, "latestReading": this.state.sensor_f3_reading},
+                {"sensorID": sensor_45, "latestReading": this.state.sensor_45_reading},
+              ]}
+            />
           </div>
         }
       </div>
