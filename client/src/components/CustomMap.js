@@ -35,7 +35,7 @@ class CustomMap extends Component {
       cityCenter: [51.2802, 1.0789],
       zoom: 12,
       marker: {},
-      polygonCoordinates: []
+      polygonData: []
     }
 
     this.myIcon = L.icon({
@@ -60,7 +60,7 @@ class CustomMap extends Component {
       }
     });
 
-    this.getPolygonCoordinates();
+    this.getPolygonData();
   }
 
   componentDidUpdate(prevProps) {
@@ -83,7 +83,7 @@ class CustomMap extends Component {
   }
 
   // fetch data from our data base
-  getPolygonCoordinates = () => {
+  getPolygonData = () => {
     var that = this;
     fetch("/api/getAreas/")
       .then(res => {
@@ -91,7 +91,7 @@ class CustomMap extends Component {
         return res.json();
       })
       .then(function(parsedData) {
-        that.setState({ polygonCoordinates: parsedData });
+        that.setState({ polygonData: parsedData });
       })
   };
 
