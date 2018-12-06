@@ -79,10 +79,12 @@ class Chart extends Component {
         }],
         xAxes: [{
             ticks: {
-                fontSize: 20
+                fontSize: 20,
+                autoSkip : true,
+                maxTicksLimit: 7
             }
         }]
-    }
+      }
     };
 
     return (
@@ -95,7 +97,7 @@ class Chart extends Component {
           onDatesChange = {({ startDate, endDate }) => this.setState({ startDate, endDate })} // PropTypes.func.isRequired,
           focusedInput = {this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
           onFocusChange = {focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
-          isOutsideRange = {() => false}
+          isOutsideRange = {date => date.isAfter(new Date().toJSON().slice(0, 10))}
         />
         <RC2 data={chartData} options={options} type='line' />
       </div>
