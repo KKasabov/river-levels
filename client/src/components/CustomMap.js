@@ -34,7 +34,10 @@ class CustomMap extends Component {
       cityCenter: [51.2802, 1.0789],
       zoom: 12,
       marker: {},
-      geoJSON_floodAlertAreas: []
+      floodAlertAreasItems: [],
+      floodAlertAreas: [],
+      currentAlertAreasItems: [],
+      currentAlertAreas: []
     }
 
     this.myIcon = L.icon({
@@ -59,11 +62,8 @@ class CustomMap extends Component {
       }
     });
 
-<<<<<<< HEAD
     this.getGeoJSON();
-=======
-    this.getPolygonData();
->>>>>>> master
+    this.getGeoJSON_aa();
   }
 
   componentDidUpdate(prevProps) {
@@ -86,10 +86,25 @@ class CustomMap extends Component {
     var that = this;
     fetch("/api/getAreas/")
     .then(res => {
+      console.log(res);
       return res.json();
     })
     .then(function(parsedData) {
-      that.setState({ geoJSON_floodAlertAreas: parsedData });
+      that.setState({ floodAlertAreasItems: parsedData[0] });
+      that.setState({ floodAlertAreas: parsedData[1] });
+    })
+  };
+
+  // fetch data from our data base
+  getGeoJSON_aa = () => {
+    var that = this;
+    fetch("/api/getCurrentAlertAreas/")
+    .then(res => {
+      return res.json();
+    })
+    .then(function(parsedData) {
+      that.setState({ currentAlertAreasItems: parsedData[0] });
+      that.setState({ currentAlertAreas: parsedData[1] });
     })
   };
 
@@ -107,13 +122,39 @@ class CustomMap extends Component {
   }
 
   createFloodAlertAreas(areas) {
+    // console.log(areas);
     return areas.map((el, idx) => {
-      return (<GeoJSON key={idx + "_fla"} data={el} style={}/>);
-    })
+      return (<GeoJSON key={idx + "_fla"} data={el} style={this.stylePolFl}/>);
+    });
   }
 
-  stylePol() {
+  createCurrentAlertAreas(areas) {
+    // console.log(areas);
+    return areas.map((el, idx) => {
+      return (<GeoJSON key={idx + "_fla"} data={el} style={this.stylePolCur}/>);
+    });
+  }
 
+  stylePolFl(feature) {
+    return {
+      fillColor: "yellow",
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.3
+    };
+  }
+
+  stylePolCur(feature) {
+    return {
+      fillColor: "red",
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.3
+    };
   }
 
   render() {
@@ -138,12 +179,12 @@ class CustomMap extends Component {
           </BaseLayer>
           <Overlay checked name="Active Alerts in UK">
             <LayerGroup>
-
+              {this.createCurrentAlertAreas(this.state.currentAlertAreas)}
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Canterbury Flood Areas">
             <LayerGroup>
-              {this.createFloodAlertAreas(this.state.geoJSON_floodAlertAreas)}
+              {this.createFloodAlertAreas(this.state.floodAlertAreas)}
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Sensors">

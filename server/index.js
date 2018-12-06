@@ -231,6 +231,30 @@ router.get("/getAreas", (req, res) => {
     }));
 });
 
+// this returns all flood areas polygon coordinates from the EA API
+// *probably needs renaming*
+router.get("/getCurrentAlertAreas", (req, res) => {
+  var areasURLs = []; // array to put all polygon coordinates in
+  var items = []; // array to keep the item objects in as we need to return them too
+  request('https://environment.data.gov.uk/flood-monitoring/id/floods', { json: true })
+    .then(function(body) {
+      items = body.items;
+      // extract polygon objects from response
+      body.items.forEach(area => {
+        areasURLs.push(area.floodArea.polygon);
+      })
+      // this returns a promise for the next then callback
+      return getPolygonData(areasURLs);
+    })
+    .then(data => {
+      // return an array of multipolygon coordinates
+      res.json([items, data]);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
+});
+
 // append /api for our http requests
 app.use("/api", router);
 
