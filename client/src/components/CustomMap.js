@@ -84,7 +84,7 @@ class CustomMap extends Component {
   // fetch data from our data base
   getGeoJSON = () => {
     var that = this;
-    fetch("/api/getAreas/")
+    fetch("/api/getFloodAreas/")
     .then(res => {
       console.log(res);
       return res.json();
@@ -98,7 +98,7 @@ class CustomMap extends Component {
   // fetch data from our data base
   getGeoJSON_aa = () => {
     var that = this;
-    fetch("/api/getCurrentAlertAreas/")
+    fetch("/api/getFloodAreas?current=1")
     .then(res => {
       return res.json();
     })

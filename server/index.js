@@ -208,40 +208,26 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
 });
 
 // this returns all flood areas polygon coordinates from the EA API
-// *probably needs renaming*
-router.get("/getAreas", (req, res) => {
+router.get("/getFloodAreas", (req, res) => {
   var areasURLs = []; // array to put all polygon coordinates in
   var items = []; // array to keep the item objects in as we need to return them too
-  request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', { json: true })
-    .then(function(body) {
-      items = body.items;
-      // extract polygon objects from response
-      body.items.forEach(area => {
-        areasURLs.push(area.polygon);
-      })
-      // this returns a promise for the next then callback
-      return getPolygonData(areasURLs);
-    })
-    .then(data => {
-      // return an array of multipolygon coordinates
-      res.json([items, data]);
-    })
-    .catch((err) => setImmediate(() => {
-      throw err;
-    }));
-});
 
-// this returns all flood areas polygon coordinates from the EA API
-// *probably needs renaming*
-router.get("/getCurrentAlertAreas", (req, res) => {
-  var areasURLs = []; // array to put all polygon coordinates in
-  var items = []; // array to keep the item objects in as we need to return them too
-  request('https://environment.data.gov.uk/flood-monitoring/id/floods', { json: true })
+  // call appropriate url depending on whether query parameter has been passed
+  let url = (req.query.current ?
+    'https://environment.data.gov.uk/flood-monitoring/id/floods' :
+    'https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5');
+
+  request(url, { json: true })
     .then(function(body) {
       items = body.items;
       // extract polygon objects from response
       body.items.forEach(area => {
-        areasURLs.push(area.floodArea.polygon);
+        if(req.query.current) {
+          areasURLs.push(area.floodArea.polygon);
+        }
+        else {
+          areasURLs.push(area.polygon);
+        }
       })
       // this returns a promise for the next then callback
       return getPolygonData(areasURLs);
