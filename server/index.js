@@ -85,7 +85,6 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       stations.slice(0, noOfResults);
     });
 }
-<<<<<<< HEAD
 //NOTE EXAMPLE:
 
 var x = getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
@@ -102,10 +101,6 @@ queryHandler.getLatestReading(sensor_f3).then(function(rows) {
   throw err;
 })); // Throw async to escape the promise chain
 
-
-=======
-//getNearestGovSensor();
->>>>>>> parent of 4d24b48... Revert "Merge dk/map"
 //receive data and add it to a database
 ttn.data(appID, accessKey)
   .then(function(client) {
@@ -152,13 +147,6 @@ ttn.data(appID, accessKey)
     process.exit(1);
   })
 
-<<<<<<< HEAD
-
-// fetches all available data in the database
-router.get("/getData/:deviceId/:startDate/:endDate", (req, res) => {
-  queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate).then(function(rows) {
-=======
-// function to extract coordinates from polygon objects
 function getPolygonData(urls) {
   let polygonCoordinates = [];
   // map all urls to async requests
@@ -183,7 +171,6 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
                   ? queryHandler.getLatestReading(req.params.deviceId)
                   : queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
->>>>>>> parent of 4d24b48... Revert "Merge dk/map"
     res.json(rows);
   })
   .catch((err) => setImmediate(() => {
@@ -191,9 +178,6 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
   }));
 });
 
-<<<<<<< HEAD
-
-=======
 // this returns all flood areas polygon coordinates from the EA API
 // *probably needs renaming*
 router.get("/getAreas", (req, res) => {
@@ -215,7 +199,6 @@ router.get("/getAreas", (req, res) => {
       throw err;
     }));
 });
->>>>>>> parent of 4d24b48... Revert "Merge dk/map"
 
 // append /api for our http requests
 app.use("/api", router);
