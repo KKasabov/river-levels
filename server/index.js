@@ -25,13 +25,14 @@ var floodAlert = false;
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
 function getLatestData(stationReference) {
-  request
-    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/measures')
-    .on('data', function(data) {
-      var sensorData = JSON.parse(data).items[0].latestReading.value;
-      // console.log(sensorData);
-      return sensorData;
-    });
+  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/measures', {
+      json: true
+    })
+    .then(function(data) {
+      return data.items[0].latestReading.value;
+    }).catch((err) => setImmediate(() => {
+      throw err;
+    }));
 }
 
 /**
@@ -49,10 +50,11 @@ function getLatestData(stationReference) {
  * @return {array}              The closest n stations
  */
 function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
-  request
-    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
-    .on('data', function(data) {
-      var sensors = JSON.parse(data).items;
+  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius, {
+      json: true
+    })
+    .then(function(data) {
+      var sensors = data.items;
       var locationsMap = {};
       for (var i = 0; i < sensors.length; i++) {
         if (sensors[i].measures[0].parameter == sensorType) {
@@ -81,16 +83,35 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       for (var i = 0; i < sortedDistances.length; i++) {
         stations.push(sortedDistances[i][0]);
       }
+      return stations.slice(0, noOfResults);
 
-      stations.slice(0, noOfResults);
-    });
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
 }
 //NOTE EXAMPLE:
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2)
+  .then(result => {
+    console.log(result);
+    var promises = [];
+    result.map(stationReference => {
+      promises.push(getLatestData(stationReference));
+    });
+    Promise.all(promises).then(data => {
+      console.log(data);
+    })
+  }).catch((err) => setImmediate(() => {
+    throw err;
+  }));
 
-var x = getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-console.log(x);
-var y = getLatestData('E3826');
-console.log(y);
+getLatestData('E3826').then(result => {
+  console.log(result);
+  return result;
+}).catch((err) => setImmediate(() => {
+  throw err;
+}));
+
 //TODO write a function which gets the latest data from a given gov sensor
 
 //get the latest reading for a given sensor
@@ -100,6 +121,7 @@ queryHandler.getLatestReading(sensor_f3).then(function(rows) {
 }).catch((err) => setImmediate(() => {
   throw err;
 })); // Throw async to escape the promise chain
+
 
 //receive data and add it to a database
 ttn.data(appID, accessKey)
@@ -150,7 +172,9 @@ ttn.data(appID, accessKey)
 function getPolygonData(urls) {
   let polygonCoordinates = [];
   // map all urls to async requests
-  var promises = urls.map(url => request(url, { json: true }));
+  var promises = urls.map(url => request(url, {
+    json: true
+  }));
   // return an array of promises
   return Promise.all(promises)
     .then((data) => {
@@ -167,22 +191,24 @@ function getPolygonData(urls) {
 router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
   // if start and end date have not been passed as parameters
   // then we need to return the latest reading
-  let funCall = ((!req.params.startDate || !req.params.endDate)
-                  ? queryHandler.getLatestReading(req.params.deviceId)
-                  : queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
+  let funCall = ((!req.params.startDate || !req.params.endDate) ?
+    queryHandler.getLatestReading(req.params.deviceId) :
+    queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
-    res.json(rows);
-  })
-  .catch((err) => setImmediate(() => {
-    throw err;
-  }));
+      res.json(rows);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
 });
 
 // this returns all flood areas polygon coordinates from the EA API
 // *probably needs renaming*
 router.get("/getAreas", (req, res) => {
   var areasURLs = []; // array to put all polygon coordinates in
-  request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', { json: true })
+  request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', {
+      json: true
+    })
     .then(function(body) {
       // extract polygon objects from response
       body.items.forEach(area => {
