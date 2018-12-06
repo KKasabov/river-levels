@@ -1,5 +1,6 @@
 // const request = require('request');
 const request = require('request-promise');
+const mqtt = require('mqtt');
 const express = require('express');
 const app = express();
 const API_PORT = 8080;
@@ -11,84 +12,41 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
-var ttn = require("ttn");
 var queryHandler = require('./queryHandler');
+var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
 var options = require('./options'); //The parsed options file
+var host = options.storageConfig.mqtt_host;
+var port = options.storageConfig.port;
 var appID = options.storageConfig.appID;
 var accessKey = options.storageConfig.accessKey;
+
+var mqtt_options = {
+  port: port,
+  username: appID,
+  password: accessKey
+};
+
+const client = mqtt.connect(host, mqtt_options);
 
 var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
-
-/**
- * Returns the closest n (noOfResults) stations of a given type (sensorType
- * ("level" for water level stations
- *  "rainfall" for rainfall stations))
- * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
- * NB: the 'request' package supports HTTPS and follows redirects by default :-)
- *
- * @param  {long} latitude      Geographical latitude
- * @param  {long} longitude     Geographical longitude
- * @param  {int} radius         The radius to look for sensors in
- * @param  {String} sensorType  The type of the sensor - level /rainfall)
- * @param  {int} noOfResults    The requested number of closest stations
- * @return {array}              The closest n stations
- */
-function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
-  request
-    .get('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius)
-    .on('data', function(data) {
-      var sensors = JSON.parse(data).items;
-      var locationsMap = {};
-      for (var i = 0; i < sensors.length; i++) {
-        if (sensors[i].measures[0].parameter == sensorType) {
-          locationsMap[sensors[i].notation] = locationsMap[sensors[i].notation] || [];
-          locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
-        }
-      }
-      var distancesMap = {};
-      Object.keys(locationsMap).forEach(function(key) {
-        var result = geoLib.distance([
-          [latitude, longitude],
-          [locationsMap[key][0], locationsMap[key][1]]
-        ]);
-        distancesMap[key] = distancesMap[key] || [];
-        distancesMap[key].push(result.distance);
-      });
-      var sortedDistances = [];
-      for (var distance in distancesMap) {
-        sortedDistances.push([distance, distancesMap[distance]]);
-      }
-      sortedDistances.sort(function(a, b) {
-        return a[1] - b[1];
-      });
-      var closest = [];
-      for (var i = 0; i < sortedDistances.length; i++) {
-        closest.push(sortedDistances[i][0]);
-      }
-      return closest.slice(0, noOfResults);
-    })
-}
-//NOTE EXAMPLE:
-
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-//receive data and add it to a database
-ttn.data(appID, accessKey)
-  .then(function(client) {
-    client.on("uplink", function(devID, payload) {
-      console.log("Received uplink from: " + devID);
-      // console.log(payload);
+// receive data and add it to a database
+client.on('connect', () => {
+  console.log("Connected");
+  client.subscribe('kentwatersensors/devices/+/up', () => {
+    client.on('message', (topic, message, packet) => {
+      var payload = JSON.parse(message);
+      console.log("Received message from " + payload.dev_id);
       hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex'); //the distance in hex format
       distance = parseInt(hexPayload, 16); //the integer value (distance in mm)
 
       var distance_sensor_from_river_bed;
       var distance_flood_plain_from_river_bed;
 
-      switch (devID) {
+      switch (payload.devID) {
         case sensor_45:
           distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_45;
           distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_45;
@@ -108,25 +66,124 @@ ttn.data(appID, accessKey)
       }
 
       var params = {
-        timestamp: payload.timestamp,
-        dev_id: devID,
+        timestamp: payload.metadata.time,
+        dev_id: payload.dev_id,
         distanceToSensor: distance
       };
 
       queryHandler.insertLogRecord(params);
       floodAlert = false;
     });
-  })
-  .catch(function(error) {
-    console.error("Error: ", error);
-    process.exit(1);
-  })
+  });
+});
 
-// function to extract coordinates from polygon objects
+function getLatestData(stationReference) {
+  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/measures', {
+      json: true
+    })
+    .then(function(data) {
+      return data.items[0].latestReading.value;
+    }).catch((err) => setImmediate(() => {
+      throw err;
+    }));
+}
+
+/**
+ * Returns the closest n (noOfResults) stations of a given type (sensorType
+ * ("level" for water level stations
+ *  "rainfall" for rainfall stations))
+ * within a given radius (in km) of a given point on a map's coordinates (latitude,longitude)
+ * NB: the 'request' package supports HTTPS and follows redirects by default :-)
+ *
+ * @param  {long} latitude      Geographical latitude
+ * @param  {long} longitude     Geographical longitude
+ * @param  {int} radius         The radius to look for sensors in
+ * @param  {String} sensorType  The type of the sensor - level /rainfall)
+ * @param  {int} noOfResults    The requested number of closest stations
+ * @return {array}              The closest n stations
+ */
+function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResults) {
+  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/?lat=' + latitude + '&long=' + longitude + '&dist=' + radius, {
+      json: true
+    })
+    .then(function(data) {
+      var sensors = data.items;
+      var locationsMap = {};
+      for (var i = 0; i < sensors.length; i++) {
+        if (sensors[i].measures[0].parameter == sensorType) {
+          locationsMap[sensors[i].notation] = locationsMap[sensors[i].notation] || [];
+          locationsMap[sensors[i].notation].push(sensors[i].lat, sensors[i].long);
+        }
+      }
+
+      var distancesMap = {};
+      Object.keys(locationsMap).forEach(function(key) {
+        var result = geoLib.distance([
+          [latitude, longitude],
+          [locationsMap[key][0], locationsMap[key][1]]
+        ]);
+        distancesMap[key] = distancesMap[key] || [];
+        distancesMap[key].push(result.distance);
+      });
+      var sortedDistances = [];
+      for (var distance in distancesMap) {
+        sortedDistances.push([distance, distancesMap[distance]]);
+      }
+      sortedDistances.sort(function(a, b) {
+        return a[1] - b[1];
+      });
+      var stations = [];
+      for (var i = 0; i < sortedDistances.length; i++) {
+        stations.push(sortedDistances[i][0]);
+      }
+      return stations.slice(0, noOfResults);
+
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
+}
+//NOTE EXAMPLE:
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2)
+  .then(result => {
+    console.log(result);
+    var promises = [];
+    result.map(stationReference => {
+      promises.push(getLatestData(stationReference));
+    });
+    Promise.all(promises).then(data => {
+      console.log(data);
+    })
+  }).catch((err) => setImmediate(() => {
+    throw err;
+  }));
+
+getLatestData('E3826').then(result => {
+  console.log(result);
+  return result;
+}).catch((err) => setImmediate(() => {
+  throw err;
+}));
+
+//TODO write a function which gets the latest data from a given gov sensor
+
+//get the latest reading for a given sensor
+queryHandler.getLatestReading(sensor_f3).then(function(rows) {
+  console.log("Latest reading is " +
+    rows[0].distanceToSensor + " from " + rows[0].timestamp);
+}).catch((err) => setImmediate(() => {
+  throw err;
+})); // Throw async to escape the promise chain
+
+
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
+
 function getPolygonData(urls) {
   let polygonCoordinates = [];
   // map all urls to async requests
-  var promises = urls.map(url => request(url, { json: true }));
+  var promises = urls.map(url => request(url, {
+    json: true
+  }));
   // return an array of promises
   return Promise.all(promises)
     .then((data) => {
@@ -139,33 +196,35 @@ function getPolygonData(urls) {
 router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
   // if start and end date have not been passed as parameters
   // then we need to return the latest reading
-  let funCall = ((!req.params.startDate || !req.params.endDate)
-                  ? queryHandler.getLatestReading(req.params.deviceId)
-                  : queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
+  let funCall = ((!req.params.startDate || !req.params.endDate) ?
+    queryHandler.getLatestReading(req.params.deviceId) :
+    queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
-    res.json(rows);
-  })
-  .catch((err) => setImmediate(() => {
-    throw err;
-  }));
+      res.json(rows);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
 });
 
 // this returns all flood areas polygon coordinates from the EA API
 // *probably needs renaming*
 router.get("/getAreas", (req, res) => {
   var areasURLs = []; // array to put all polygon coordinates in
+  var items = []; // array to keep the item objects in as we need to return them too
   request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', { json: true })
     .then(function(body) {
+      items = body.items;
       // extract polygon objects from response
       body.items.forEach(area => {
         areasURLs.push(area.polygon);
       })
-      // this returns a to promise for the next then callback
+      // this returns a promise for the next then callback
       return getPolygonData(areasURLs);
     })
     .then(data => {
       // return an array of multipolygon coordinates
-      res.json(data);
+      res.json([items, data]);
     })
     .catch((err) => setImmediate(() => {
       throw err;

@@ -59,7 +59,11 @@ class CustomMap extends Component {
       }
     });
 
+<<<<<<< HEAD
     this.getGeoJSON();
+=======
+    this.getPolygonData();
+>>>>>>> master
   }
 
   componentDidUpdate(prevProps) {
@@ -109,7 +113,7 @@ class CustomMap extends Component {
   }
 
   stylePol() {
-    
+
   }
 
   render() {
