@@ -130,11 +130,7 @@ function getPolygonData(urls) {
   // return an array of promises
   return Promise.all(promises)
     .then((data) => {
-      // extract and put coordinates into array
-      data.forEach(promise => {
-        polygonCoordinates.push(promise.features[0].geometry.coordinates);
-      })
-      return polygonCoordinates;
+      return data;
     });
 }
 

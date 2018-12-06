@@ -5,7 +5,6 @@ import AddressControl from './AddressControl'
 import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import L from 'leaflet';
-import test from './test'
 
 const sensorPositions = [
   [51.257785, 1.030079],
@@ -35,7 +34,7 @@ class CustomMap extends Component {
       cityCenter: [51.2802, 1.0789],
       zoom: 12,
       marker: {},
-      polygonCoordinates: []
+      geoJSON_floodAlertAreas: []
     }
 
     this.myIcon = L.icon({
@@ -60,7 +59,7 @@ class CustomMap extends Component {
       }
     });
 
-    this.getPolygonCoordinates();
+    this.getGeoJSON();
   }
 
   componentDidUpdate(prevProps) {
@@ -73,40 +72,22 @@ class CustomMap extends Component {
 
   }
   createPolygon(polyObj) {
-    // var arr = polyObj.features[0].geometry.coordinates[0];
-    // var revArr = this.reverseArr(arr, 0);
-    // console.log(arr);
-    // console.log(revArr);
     return (
       <Polygon color="purple" positions={polyObj.features[0].geometry.coordinates} />
     );
   }
 
   // fetch data from our data base
-  getPolygonCoordinates = () => {
+  getGeoJSON = () => {
     var that = this;
     fetch("/api/getAreas/")
-      .then(res => {
-        console.log("response");
-        return res.json();
-      })
-      .then(function(parsedData) {
-        that.setState({ polygonCoordinates: parsedData });
-      })
+    .then(res => {
+      return res.json();
+    })
+    .then(function(parsedData) {
+      that.setState({ geoJSON_floodAlertAreas: parsedData });
+    })
   };
-
-  // reverseArr(coordinates, c) {
-  //   if(isNaN(coordinates[c])) {
-  //     return this.reverseArr(coordinates[c], 0);
-  //   } else if(!isNaN(coordinates[c])) {
-  //     var buff = coordinates[0];
-  //     coordinates[0] = coordinates[1];
-  //     coordinates[1] = buff;
-  //     return this.reverseArr(coordinates, c++);
-  //   } else {
-  //     return coordinates;
-  //   }
-  // }
 
   createSensorMarkers(position, reading) {
     return (
@@ -119,6 +100,16 @@ class CustomMap extends Component {
         </Tooltip>
       </Marker>
     );
+  }
+
+  createFloodAlertAreas(areas) {
+    return areas.map((el, idx) => {
+      return (<GeoJSON key={idx + "_fla"} data={el} style={}/>);
+    })
+  }
+
+  stylePol() {
+    
   }
 
   render() {
@@ -141,14 +132,14 @@ class CustomMap extends Component {
           <BaseLayer checked={this.props.isColorBlind} name="Black And White">
             <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png" />
           </BaseLayer>
-          <Overlay checked name="Active Alerts">
+          <Overlay checked name="Active Alerts in UK">
             <LayerGroup>
 
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Canterbury Flood Areas">
             <LayerGroup>
-              <GeoJSON key="slkhgkjdsfghkjsd" data={test} />
+              {this.createFloodAlertAreas(this.state.geoJSON_floodAlertAreas)}
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Sensors">
