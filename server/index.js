@@ -1,5 +1,6 @@
 // const request = require('request');
 const request = require('request-promise');
+const mqtt = require('mqtt');
 const express = require('express');
 const app = express();
 const API_PORT = 8080;
@@ -13,16 +14,69 @@ const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
 var ttn = require("ttn");
 var queryHandler = require('./queryHandler');
+var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
 var options = require('./options'); //The parsed options file
+var host = options.storageConfig.mqtt_host;
+var port = options.storageConfig.port;
 var appID = options.storageConfig.appID;
 var accessKey = options.storageConfig.accessKey;
+
+var mqtt_options = {
+  port: port,
+  username: appID,
+  password: accessKey
+};
+
+const client = mqtt.connect(host, mqtt_options);
 
 var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
+// receive data and add it to a database
+client.on('connect', () => {
+  console.log("Connected");
+  client.subscribe('kentwatersensors/devices/+/up', () => {
+    client.on('message', (topic, message, packet) => {
+      var payload = JSON.parse(message);
+      console.log("Received message from " + payload.dev_id);
+      hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex'); //the distance in hex format
+      distance = parseInt(hexPayload, 16); //the integer value (distance in mm)
+
+      var distance_sensor_from_river_bed;
+      var distance_flood_plain_from_river_bed;
+
+      switch (payload.devID) {
+        case sensor_45:
+          distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_45;
+          distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_45;
+          break;
+        case sensor_f3:
+          distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_f3;
+          distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_f3;
+          break;
+      }
+
+      //TODO handle the 300mm difference
+      if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
+        console.log('SHIIT FLOOD GET THE BOAT');
+        floodAlert = true;
+      } else {
+        console.log('NO flood');
+      }
+
+      var params = {
+        timestamp: payload.metadata.time,
+        dev_id: payload.dev_id,
+        distanceToSensor: distance
+      };
+
+      queryHandler.insertLogRecord(params);
+      floodAlert = false;
+    });
+  });
+});
 
 /**
  * Returns the closest n (noOfResults) stations of a given type (sensorType
@@ -76,51 +130,6 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
 //NOTE EXAMPLE:
 
 getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
-//receive data and add it to a database
-ttn.data(appID, accessKey)
-  .then(function(client) {
-    client.on("uplink", function(devID, payload) {
-      console.log("Received uplink from: " + devID);
-      // console.log(payload);
-      hexPayload = Buffer.from(payload.payload_raw, 'base64').toString('hex'); //the distance in hex format
-      distance = parseInt(hexPayload, 16); //the integer value (distance in mm)
-
-      var distance_sensor_from_river_bed;
-      var distance_flood_plain_from_river_bed;
-
-      switch (devID) {
-        case sensor_45:
-          distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_45;
-          distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_45;
-          break;
-        case sensor_f3:
-          distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_f3;
-          distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_f3;
-          break;
-      }
-
-      //TODO handle the 300mm difference
-      if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
-        console.log('SHIIT FLOOD GET THE BOAT');
-        floodAlert = true;
-      } else {
-        console.log('NO flood');
-      }
-
-      var params = {
-        timestamp: payload.timestamp,
-        dev_id: devID,
-        distanceToSensor: distance
-      };
-
-      queryHandler.insertLogRecord(params);
-      floodAlert = false;
-    });
-  })
-  .catch(function(error) {
-    console.error("Error: ", error);
-    process.exit(1);
-  })
 
 // function to extract coordinates from polygon objects
 function getPolygonData(urls) {
@@ -130,11 +139,7 @@ function getPolygonData(urls) {
   // return an array of promises
   return Promise.all(promises)
     .then((data) => {
-      // extract and put coordinates into array
-      data.forEach(promise => {
-        polygonCoordinates.push(promise.features[0].geometry.coordinates);
-      })
-      return polygonCoordinates;
+      return data;
     });
 }
 
@@ -158,18 +163,20 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
 // *probably needs renaming*
 router.get("/getAreas", (req, res) => {
   var areasURLs = []; // array to put all polygon coordinates in
+  var items = []; // array to keep the item objects in as we need to return them too
   request('https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5', { json: true })
     .then(function(body) {
+      items = body.items;
       // extract polygon objects from response
       body.items.forEach(area => {
         areasURLs.push(area.polygon);
       })
-      // this returns a to promise for the next then callback
+      // this returns a promise for the next then callback
       return getPolygonData(areasURLs);
     })
     .then(data => {
       // return an array of multipolygon coordinates
-      res.json(data);
+      res.json([items, data]);
     })
     .catch((err) => setImmediate(() => {
       throw err;
