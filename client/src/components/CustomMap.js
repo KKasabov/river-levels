@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon } from 'react-leaflet';
+import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon, GeoJSON } from 'react-leaflet';
 import './CustomMap.css';
 import AddressControl from './AddressControl'
 import sensorMarker from '../resources/sensorMarker.png';
@@ -148,7 +148,7 @@ class CustomMap extends Component {
           </Overlay>
           <Overlay checked name="Canterbury Flood Areas">
             <LayerGroup>
-              {this.createPolygon(test)}
+              <GeoJSON key="slkhgkjdsfghkjsd" data={test} />
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Sensors">
