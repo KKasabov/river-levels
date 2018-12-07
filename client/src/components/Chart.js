@@ -77,7 +77,7 @@ class Chart extends Component {
   getNext5Days() {
     var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var result = [];
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 0; i < 5; i++) {
         var d = new Date();
         d.setDate(d.getDate() + i);
         result.push(days[d.getDay()]);
