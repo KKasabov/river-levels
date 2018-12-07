@@ -1,12 +1,16 @@
 import React, { Component } from 'react';
-import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon, GeoJSON } from 'react-leaflet';
-import './CustomMap.css';
-import AddressControl from './AddressControl'
-import sensorMarker from '../resources/sensorMarker.png';
-import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import L from 'leaflet';
+import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon, GeoJSON } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
 import { connect } from "react-redux";
 import { getLocation, getAreasData } from "../actions/actions";
+import './CustomMap.css';
+import AddressControl from './AddressControl'
+
+import 'react-leaflet-markercluster/dist/styles.min.css';
+
+import sensorMarker from '../resources/sensorMarker.png';
+import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 
 const sensorPositions = [
   [51.257785, 1.030079],
@@ -22,7 +26,6 @@ const sensorPositions = [
 const { BaseLayer, Overlay } = LayersControl
 
 class CustomMap extends Component {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -44,7 +47,7 @@ class CustomMap extends Component {
       arr = Object.values(this.refs.map.leafletElement._targets).filter(target => target.hasOwnProperty("_latlng"));
       if(arr[arr.length - 1] != null && arr.length > sensorPositions.length ) {
         this.setState({marker: arr[arr.length - 1]});
-        this.state.marker._popup._content = "Home";
+        // this.state.marker._popup._content = "Home"; // doesn't work since adding markercluster - need to look into
         this.props.getLocation({
           location: [this.state.marker._latlng.lat, this.state.marker._latlng.lng]
         });
@@ -175,14 +178,16 @@ class CustomMap extends Component {
           </Overlay>
           <Overlay checked name="Sensors">
             <LayerGroup>
-              {this.createSensorMarkers(sensorPositions[0], "Reading_EA_0")}
-              {this.createSensorMarkers(sensorPositions[1], "Reading_EA_1")}
-              {this.createSensorMarkers(sensorPositions[2], "Reading_EA_2")}
-              {this.createSensorMarkers(sensorPositions[3], "Reading_EA_3")}
-              {this.createSensorMarkers(sensorPositions[4], "Reading_EA_4")}
-              {this.createSensorMarkers(sensorPositions[5], "Reading_EA_5")}
-              {this.createSensorMarkers(sensorPositions[6], this.props.sensor_f3_reading)}
-              {this.createSensorMarkers(sensorPositions[7], this.props.sensor_45_reading)}
+              <MarkerClusterGroup>
+                {this.createSensorMarkers(sensorPositions[0], "Reading_EA_0")}
+                {this.createSensorMarkers(sensorPositions[1], "Reading_EA_1")}
+                {this.createSensorMarkers(sensorPositions[2], "Reading_EA_2")}
+                {this.createSensorMarkers(sensorPositions[3], "Reading_EA_3")}
+                {this.createSensorMarkers(sensorPositions[4], "Reading_EA_4")}
+                {this.createSensorMarkers(sensorPositions[5], "Reading_EA_5")}
+                {this.createSensorMarkers(sensorPositions[6], this.props.sensor_f3_reading)}
+                {this.createSensorMarkers(sensorPositions[7], this.props.sensor_45_reading)}
+              </MarkerClusterGroup>
             </LayerGroup>
           </Overlay>
         </LayersControl>

@@ -2,7 +2,7 @@
   "mqtt_host": "mqtt://lora.kent.ac.uk",
   "port": "1883",
   "appID":"kentwatersensors",
-  "accessKey":"ttn-account-v2.7j6Z9OduNwFW7il2Sd28YYF4Q-8l9rDDPaNRFw06-GM",
+  "accessKey":"ttn-account-v2.mRzaS7HOchwKsQxdj1zD-KwjxXAptb7s9pca78Nv7_U",
   "host": "dragon.kent.ac.uk",
   "user": "ni60",
   "pwd": "sul3lox"
