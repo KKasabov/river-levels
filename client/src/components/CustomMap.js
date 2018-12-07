@@ -5,6 +5,8 @@ import AddressControl from './AddressControl'
 import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import L from 'leaflet';
+import { connect } from "react-redux";
+import { getLocation } from "../actions/actions";
 
 const sensorPositions = [
   [51.257785, 1.030079],
@@ -31,7 +33,6 @@ class CustomMap extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      cityCenter: [51.2802, 1.0789],
       zoom: 12,
       marker: {},
       floodAlertAreasItems: [],
@@ -51,19 +52,20 @@ class CustomMap extends Component {
   componentDidMount() {
     let arr;
     this.refs.map.leafletElement.on('moveend', e => {
-      arr = Object.values(this.refs.map.leafletElement._targets);
+      arr = Object.values(this.refs.map.leafletElement._targets).filter(target => target.hasOwnProperty("_latlng"));
       if(arr[arr.length - 1] != null && arr.length > sensorPositions.length ) {
         this.setState({marker: arr[arr.length - 1]});
+        this.state.marker._popup._content = "Home";
         this.state.marker.on('dragend', e => {
-          this.state.marker._popup._content = "Home";
           this.setState({marker: arr[arr.length - 1]});
-          this.state.marker._popup._content = "Home";
+          this.props.getLocation({
+            location: [this.state.marker._latlng.lat, this.state.marker._latlng.lng]
+          });
         });
       }
     });
 
     this.getGeoJSON();
-    this.getGeoJSON_aa();
   }
 
   componentDidUpdate(prevProps) {
@@ -75,6 +77,7 @@ class CustomMap extends Component {
   componentWillUnmount() {
 
   }
+
   createPolygon(polyObj) {
     return (
       <Polygon color="purple" positions={polyObj.features[0].geometry.coordinates} />
@@ -84,28 +87,17 @@ class CustomMap extends Component {
   // fetch data from our data base
   getGeoJSON = () => {
     var that = this;
-    fetch("/api/getFloodAreas/")
-    .then(res => {
-      console.log(res);
-      return res.json();
-    })
-    .then(function(parsedData) {
-      that.setState({ floodAlertAreasItems: parsedData[0] });
-      that.setState({ floodAlertAreas: parsedData[1] });
-    })
-  };
-
-  // fetch data from our data base
-  getGeoJSON_aa = () => {
-    var that = this;
-    fetch("/api/getFloodAreas?current=1")
-    .then(res => {
-      return res.json();
-    })
-    .then(function(parsedData) {
-      that.setState({ currentAlertAreasItems: parsedData[0] });
-      that.setState({ currentAlertAreas: parsedData[1] });
-    })
+    Promise.all([
+      fetch("/api/getFloodAreas/"),
+      fetch("/api/getFloodAreas?current=1")
+    ])
+    .then(([res1, res2]) => Promise.all([res1.json(), res2.json()]))
+    .then(([floodAreas, currentAlertAreas]) => that.setState({
+        floodAlertAreasItems: floodAreas[0],
+        floodAlertAreas: floodAreas[1],
+        currentAlertAreasItems: currentAlertAreas[0],
+        currentAlertAreas: currentAlertAreas[1]
+    }));
   };
 
   createSensorMarkers(position, reading) {
@@ -164,7 +156,7 @@ class CustomMap extends Component {
         className="map"
         minZoom="4"
         maxZoom="19"
-        center={this.state.cityCenter}
+        center={this.props.location}
         zoom={this.state.zoom}
         ref='map'
         zoomControl={false}>
@@ -205,4 +197,14 @@ class CustomMap extends Component {
   }
 }
 
-export default CustomMap;
+const mapDispatchToProps = dispatch => {
+  return {
+    getLocation: location => dispatch(getLocation(location))
+  };
+};
+
+const mapStateToProps = state => {
+  return { location: state.getMapInputReducer.location };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(CustomMap);
