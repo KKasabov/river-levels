@@ -6,7 +6,7 @@ import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import L from 'leaflet';
 import { connect } from "react-redux";
-import { getLocation } from "../actions/actions";
+import { getLocation, getAreasData } from "../actions/actions";
 
 const sensorPositions = [
   [51.257785, 1.030079],
@@ -34,11 +34,7 @@ class CustomMap extends Component {
     super(props);
     this.state = {
       zoom: 12,
-      marker: {},
-      floodAlertAreasItems: [],
-      floodAlertAreas: [],
-      currentAlertAreasItems: [],
-      currentAlertAreas: []
+      marker: {}
     }
 
     this.myIcon = L.icon({
@@ -56,6 +52,9 @@ class CustomMap extends Component {
       if(arr[arr.length - 1] != null && arr.length > sensorPositions.length ) {
         this.setState({marker: arr[arr.length - 1]});
         this.state.marker._popup._content = "Home";
+        this.props.getLocation({
+          location: [this.state.marker._latlng.lat, this.state.marker._latlng.lng]
+        });
         this.state.marker.on('dragend', e => {
           this.setState({marker: arr[arr.length - 1]});
           this.props.getLocation({
@@ -92,12 +91,14 @@ class CustomMap extends Component {
       fetch("/api/getFloodAreas?current=1")
     ])
     .then(([res1, res2]) => Promise.all([res1.json(), res2.json()]))
-    .then(([floodAreas, currentAlertAreas]) => that.setState({
+    .then(([floodAreas, currentAlertAreas]) =>
+      that.props.getAreasData({
         floodAlertAreasItems: floodAreas[0],
         floodAlertAreas: floodAreas[1],
         currentAlertAreasItems: currentAlertAreas[0],
         currentAlertAreas: currentAlertAreas[1]
-    }));
+      })
+    );
   };
 
   createSensorMarkers(position, reading) {
@@ -171,12 +172,12 @@ class CustomMap extends Component {
           </BaseLayer>
           <Overlay checked name="Active Alerts in UK">
             <LayerGroup>
-              {this.createCurrentAlertAreas(this.state.currentAlertAreas)}
+              {this.createCurrentAlertAreas(this.props.currentAlertAreas)}
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Canterbury Flood Areas">
             <LayerGroup>
-              {this.createFloodAlertAreas(this.state.floodAlertAreas)}
+              {this.createFloodAlertAreas(this.props.floodAlertAreas)}
             </LayerGroup>
           </Overlay>
           <Overlay checked name="Sensors">
@@ -199,12 +200,19 @@ class CustomMap extends Component {
 
 const mapDispatchToProps = dispatch => {
   return {
-    getLocation: location => dispatch(getLocation(location))
+    getLocation: location => dispatch(getLocation(location)),
+    getAreasData: areasData => dispatch(getAreasData(areasData))
   };
 };
 
 const mapStateToProps = state => {
-  return { location: state.getMapInputReducer.location };
+  return {
+    location: state.getMapInputReducer.location,
+    floodAlertAreasItems: state.getMapInputReducer.floodAlertAreasItems,
+    floodAlertAreas: state.getMapInputReducer.floodAlertAreas,
+    currentAlertAreasItems: state.getMapInputReducer.currentAlertAreasItems,
+    currentAlertAreas: state.getMapInputReducer.currentAlertAreas
+  };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(CustomMap);
