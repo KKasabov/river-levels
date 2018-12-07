@@ -111,17 +111,51 @@ class CustomMap extends Component {
   }
 
   createFloodAlertAreas(areas) {
-    // console.log(areas);
     return areas.map((el, idx) => {
-      return (<GeoJSON key={idx + "_fla"} data={el} style={this.stylePolFl}/>);
+      if(idx < 9) {
+        return (
+          <GeoJSON
+            ref={'area' + el.features[0].properties.FWS_TACODE} // unique identifier for the ref
+            key={idx + "_fla"}
+            data={el}
+            style={this.stylePolFl}
+            onEachFeature={this.onEachFeature.bind(this)}
+         />);
+     }
     });
   }
 
   createCurrentAlertAreas(areas) {
-    // console.log(areas);
     return areas.map((el, idx) => {
-      return (<GeoJSON key={idx + "_fla"} data={el} style={this.stylePolCur}/>);
+      return (
+        <GeoJSON
+          ref={'area' + el.features[0].properties.FWS_TACODE} // unique identifier for the ref
+          key={idx + "_fla"}
+          data={el}
+          style={this.stylePolCur}
+          onEachFeature={this.onEachFeature.bind(this)}
+       />);
     });
+  }
+
+  onEachFeature(feature, layer) {
+    layer.on({
+      mouseover: this.highlightFeature.bind(this),
+      mouseout: this.resetHighlight.bind(this)
+    });
+  }
+
+  highlightFeature(e) {
+    var layer = e.target;
+    layer.setStyle({
+        color: 'blue'
+    });
+  }
+
+  resetHighlight(e) {
+    var layer = e.target;
+    // get ref to geojson obj using the unique id which we get from the event
+    this.refs['area' + e.target.feature.properties.FWS_TACODE].leafletElement.resetStyle(layer);
   }
 
   stylePolFl(feature) {

@@ -50,12 +50,12 @@ const mailOptions = {
   html: 'You have just been flooded!'// plain text body
 };
 
-transporter.sendMail(mailOptions, function (err, info) {
-   if(err)
-     console.log(err)
-   else
-     console.log(info);
-});
+// transporter.sendMail(mailOptions, function (err, info) {
+//    if(err)
+//      console.log(err)
+//    else
+//      console.log(info);
+// });
 
 // receive data and add it to a database
 client.on('connect', () => {
