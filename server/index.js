@@ -13,6 +13,7 @@ const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
 var queryHandler = require('./queryHandler');
+var weatherForecast = require('./weatherForecast');
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
 
 var options = require('./options'); //The parsed options file
@@ -200,11 +201,11 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
     queryHandler.getLatestReading(req.params.deviceId) :
     queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
-      res.json(rows);
-    })
-    .catch((err) => setImmediate(() => {
-      throw err;
-    }));
+    res.json(rows);
+  })
+  .catch((err) => setImmediate(() => {
+    throw err;
+  }));
 });
 
 // this returns all flood areas polygon coordinates from the EA API
@@ -235,6 +236,17 @@ router.get("/getFloodAreas", (req, res) => {
     .then(data => {
       // return an array of multipolygon coordinates
       res.json([items, data]);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
+});
+
+router.get("/weather", (req, res) => {
+  // if start and end date have not been passed as parameters
+  // then we need to return the latest reading
+  weatherForecast.getCurrentRainData(51.2802, 1.0789).then(function(data) {
+      res.json(data);
     })
     .catch((err) => setImmediate(() => {
       throw err;

@@ -4,6 +4,8 @@ import './App.css';
 import axios from 'axios';
 import CustomMap from './components/CustomMap';
 import CurrentRiverLevelPage from './components/CurrentRiverLevelPage';
+import PredictedRiverLevelPage from './components/PredictedRiverLevelPage';
+import HistoricalDataPage from './components/HistoricalDataPage';
 import Chart from './components/Chart';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -108,12 +110,6 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.tabIndex === 0 && <CustomMap sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading} isColorBlind={false}/>}
-        {this.state.tabIndex === 3 &&
-          <div>
-            <Chart sensorId={sensor_f3}/>
-            <Chart sensorId={sensor_45}/>
-          </div>
-        }
         {this.state.tabIndex === 1 &&
           <div>
             <CurrentRiverLevelPage
@@ -124,6 +120,12 @@ class App extends Component {
             />
           </div>
         }
+        {this.state.tabIndex === 2 &&
+          <div>
+            <PredictedRiverLevelPage />
+          </div>
+        }
+        {this.state.tabIndex === 3 && <HistoricalDataPage sensorIds={[sensor_f3, sensor_45]}/>}
       </div>
     );
   }
