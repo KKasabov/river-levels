@@ -12,6 +12,7 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 
+var nodemailer = require('nodemailer');
 var queryHandler = require('./queryHandler');
 var weatherForecast = require('./weatherForecast');
 var geoLib = require('geo-lib'); //A library which helps with coordinates calculations
@@ -33,6 +34,28 @@ const client = mqtt.connect(host, mqtt_options);
 var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
+
+var transporter = nodemailer.createTransport({
+ service: 'gmail',
+ auth: {
+        user: 'floodalertskentuk@gmail.com',
+        pass: '762(}*ahfjkAf08f7'
+    }
+});
+
+const mailOptions = {
+  from: 'floodalertskentuk@gmail.com', // sender address
+  to: 'dkk6@kent.ac.uk', // list of receivers
+  subject: 'Subject of your email', // Subject line
+  html: 'You have just been flooded!'// plain text body
+};
+
+transporter.sendMail(mailOptions, function (err, info) {
+   if(err)
+     console.log(err)
+   else
+     console.log(info);
+});
 
 // receive data and add it to a database
 client.on('connect', () => {
