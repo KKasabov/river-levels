@@ -11,6 +11,7 @@ const distance_flood_plain_from_river_bed_sensor_f3 = 1820;
 const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001012345'
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
+const Nexmo = require('nexmo');
 
 var nodemailer = require('nodemailer');
 var queryHandler = require('./queryHandler');
@@ -56,6 +57,18 @@ const mailOptions = {
 //    else
 //      console.log(info);
 // });
+
+const nexmo = new Nexmo({
+  apiKey: '55f668a2',
+  apiSecret: '8HABIV5hhsXgcyqu'
+})
+
+const from = 'floodalertskentuk'
+const toNiki = '447459700541' //
+const toDaniel = '447424124821'
+const text = 'ticham brat'
+
+// nexmo.message.sendSms(from, to, text)
 
 // receive data and add it to a database
 client.on('connect', () => {
