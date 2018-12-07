@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './CurrentRiverLevelPage.css';
-import DataTable from './DataTable';
+import DataTable from '../components/DataTable';
 
 const sensor_f3 = "lairdc0ee4000010109f3"; //The sensor with id 'lairdc0ee4000010109f3'
 const distance_sensor_from_river_bed_sensor_f3 = 1820;

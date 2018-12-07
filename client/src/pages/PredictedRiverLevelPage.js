@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 // import './PredictedRiverLevelPage.css';
-import Chart from './Chart';
+import Chart from '../components/Chart';
 
 class PredictedRiverLevelPage extends Component {
 

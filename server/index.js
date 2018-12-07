@@ -243,8 +243,6 @@ router.get("/getFloodAreas", (req, res) => {
 });
 
 router.get("/weather", (req, res) => {
-  // if start and end date have not been passed as parameters
-  // then we need to return the latest reading
   weatherForecast.getCurrentRainData(51.2802, 1.0789).then(function(data) {
       res.json(data);
     })
