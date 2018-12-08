@@ -225,14 +225,16 @@ createFloodAlertAreas(areas) {
                 </Overlay>
                 <Overlay checked name="Sensors">
                   <LayerGroup>
-                    {this.createSensorMarkers(sensorPositions[0], "Reading_EA_0")}
-                    {this.createSensorMarkers(sensorPositions[1], "Reading_EA_1")}
-                    {this.createSensorMarkers(sensorPositions[2], "Reading_EA_2")}
-                    {this.createSensorMarkers(sensorPositions[3], "Reading_EA_3")}
-                    {this.createSensorMarkers(sensorPositions[4], "Reading_EA_4")}
-                    {this.createSensorMarkers(sensorPositions[5], "Reading_EA_5")}
-                    {this.createSensorMarkers(sensorPositions[6], this.props.sensor_f3_reading)}
-                    {this.createSensorMarkers(sensorPositions[7], this.props.sensor_45_reading)}
+                    <MarkerClusterGroup>
+                      {this.createSensorMarkers(sensorPositions[0], "Reading_EA_0")}
+                      {this.createSensorMarkers(sensorPositions[1], "Reading_EA_1")}
+                      {this.createSensorMarkers(sensorPositions[2], "Reading_EA_2")}
+                      {this.createSensorMarkers(sensorPositions[3], "Reading_EA_3")}
+                      {this.createSensorMarkers(sensorPositions[4], "Reading_EA_4")}
+                      {this.createSensorMarkers(sensorPositions[5], "Reading_EA_5")}
+                      {this.createSensorMarkers(sensorPositions[6], this.props.sensor_f3_reading)}
+                      {this.createSensorMarkers(sensorPositions[7], this.props.sensor_45_reading)}
+                    </MarkerClusterGroup>
                   </LayerGroup>
                 </Overlay>
               </LayersControl>
