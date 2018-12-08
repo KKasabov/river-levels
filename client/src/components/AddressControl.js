@@ -11,7 +11,7 @@ class AddressControl extends MapControl {
       provider: provider,
       style: 'bar',
       showMarker: true,
-      showPopup: false,
+      showPopup: true,
       marker: {
         icon: L.icon({
           iconUrl: addressMarker,
@@ -22,7 +22,7 @@ class AddressControl extends MapControl {
         draggable: true
       },
       popupFormat: ({ query, result }) => result.label,   // optional: function    - default returns result label
-      maxMarkers: 4,
+      maxMarkers: 1,
       retainZoomLevel: false,
       animateZoom: true,
       autoClose: true,
