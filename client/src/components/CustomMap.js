@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import L from 'leaflet';
 import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon, GeoJSON } from 'react-leaflet';
 import Control from 'react-leaflet-control';
-import { withStyles } from '@material-ui/core/styles';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import { connect} from "react-redux";
 import { getLocation, getAreasData } from "../actions/actions";
@@ -12,12 +11,13 @@ import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import 'react-leaflet-markercluster/dist/styles.min.css';
 import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
-import Button from '@material-ui/core/Button';
 import { Values } from "redux-form-website-template";
 import getMuiTheme from "material-ui/styles/getMuiTheme";
 import showResults from "./showResults";
 import MaterialUiForm from "./MaterialUiForm";
 import PropTypes from 'prop-types';
+import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 
@@ -60,6 +60,15 @@ class CustomMap extends Component {
   }
 
   componentDidMount() {
+    // console.log(this.refs.map.leafletElement);
+    this.refs.map.leafletElement.on('baselayerchange', function(e) {
+      if(e.name == "Default") {
+        console.log("c");
+      } else {
+        //black & white
+        console.log("bw");
+      }
+    });
     this.refs.map.leafletElement.on('geosearch/showlocation', (e) => {
       this.handleLocationFound(false, e.target._targets);
     });
@@ -67,6 +76,12 @@ class CustomMap extends Component {
       this.handleLocationFound(true, e.target._targets);
     });
     this.getGeoJSON();
+  }
+
+  componentDidUpdate(prevProps) {
+  }
+
+  componentWillUnmount() {
   }
 
   handleLocationFound(isDragged, targets) {
@@ -89,24 +104,6 @@ class CustomMap extends Component {
       this.refs.map.leafletElement.scrollWheelZoom.enable()
       this.refs.map.leafletElement.dragging.enable();
     }
-    // this.setState({isSubscribeVisible: true});
-    // this.forceUpdate();
-  }
-
-  componentDidUpdate(prevProps) {
-    if(prevProps.isColorBlind !== this.props.isColorBlind) {
-      //setIcons for sensors and search
-    }
-  }
-
-  componentWillUnmount() {
-
-  }
-
-  createPolygon(polyObj) {
-    return (
-      <Polygon color="purple" positions={polyObj.features[0].geometry.coordinates} />
-    );
   }
 
   // fetch data from our data base
@@ -215,7 +212,6 @@ createFloodAlertAreas(areas) {
 
         getSubscribeFrom() {
           return (
-
               <MuiThemeProvider muiTheme={getMuiTheme()}>
                 <div style={{ padding: 15 }}>
                   <MaterialUiForm onSubmit={showResults} />
@@ -241,7 +237,7 @@ createFloodAlertAreas(areas) {
               <ZoomControl position="topleft" />
               <AddressSearch />
               <LayersControl position="topright">
-                <BaseLayer checked={!this.props.isColorBlind} name="Colour">
+                <BaseLayer checked={!this.props.isColorBlind} name="Default">
                   <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 </BaseLayer>
                 <BaseLayer checked={this.props.isColorBlind} name="Black And White">

@@ -1,16 +1,15 @@
 import React from "react";
 import { Field, reduxForm } from "redux-form";
 import { connect } from "react-redux";
-import { withStyles } from '@material-ui/core/styles';
+import validate from "./validate";
+import PropTypes from 'prop-types';
 import TextField from "material-ui/TextField";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import asyncValidate from "./asyncValidate";
-import validate from "./validate";
+import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
-import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
@@ -89,5 +88,4 @@ const mapStateToProps = state => {
 export default connect(mapStateToProps)(reduxForm({
   form: "MaterialUiForm",
   validate,
-  asyncValidate
 })(MaterialUiForm));

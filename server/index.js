@@ -13,6 +13,7 @@ const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 const Nexmo = require('nexmo');
 
+var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
 var queryHandler = require('./queryHandler');
 var weatherForecast = require('./weatherForecast');
@@ -23,6 +24,13 @@ var host = options.storageConfig.mqtt_host;
 var port = options.storageConfig.port;
 var appID = options.storageConfig.appID;
 var accessKey = options.storageConfig.accessKey;
+var nodemailer_service = options.storageConfig.nodemailer_service;
+var nodemailer_user = options.storageConfig.nodemailer_user;
+var nodemailer_pwd = options.storageConfig.nodemailer_pwd;
+var nexmo_apiKey = options.storageConfig.nexmo_apiKey;
+var nexmo_apiSecret = options.storageConfig.nexmo_apiSecret;
+router.use(bodyParser.json()); // support json encoded bodies
+router.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 var mqtt_options = {
   port: port,
@@ -30,45 +38,46 @@ var mqtt_options = {
   password: accessKey
 };
 
+const nexmo = new Nexmo({
+  apiKey: nexmo_apiKey,
+  apiSecret: nexmo_apiSecret
+})
+
+var transporter = nodemailer.createTransport({
+ service: nodemailer_service,
+ auth: {
+        user: nodemailer_user,
+        pass: nodemailer_pwd
+    }
+});
+
 const client = mqtt.connect(host, mqtt_options);
 
 var hexPayload; //distance to water (hex)
 var distance; //distance to water in mm
 var floodAlert = false;
 
-var transporter = nodemailer.createTransport({
- service: 'gmail',
- auth: {
-        user: 'floodalertskentuk@gmail.com',
-        pass: '762(}*ahfjkAf08f7'
-    }
-});
+function sendEmail(to, subject, htmlContent) {
+  const mailOptions = {
+    from: 'floodalertskentuk@gmail.com', // sender address
+    to, // list of receivers
+    subject, // Subject line
+    html: htmlContent// plain text body
+  };
 
-const mailOptions = {
-  from: 'floodalertskentuk@gmail.com', // sender address
-  to: 'dkk6@kent.ac.uk', // list of receivers
-  subject: 'Subject of your email', // Subject line
-  html: 'You have just been flooded!'// plain text body
-};
+  transporter.sendMail(mailOptions, function (err, info) {
+     if(err)
+       console.log(err)
+     else
+       console.log(info);
+  });
+}
 
-// transporter.sendMail(mailOptions, function (err, info) {
-//    if(err)
-//      console.log(err)
-//    else
-//      console.log(info);
-// });
-
-const nexmo = new Nexmo({
-  apiKey: '55f668a2',
-  apiSecret: '8HABIV5hhsXgcyqu'
-})
-
-const from = 'floodalertskentuk'
-const toNiki = '447459700541' //
-const toDaniel = '447424124821'
-const text = 'ticham brat'
-
-// nexmo.message.sendSms(from, to, text)
+function sendSMS(to, text) {
+  const from = 'floodalertskentuk'
+  //e.g. to = 447424124821
+  nexmo.message.sendSms(from, to, text)
+}
 
 // receive data and add it to a database
 client.on('connect', () => {
@@ -242,6 +251,12 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
   .catch((err) => setImmediate(() => {
     throw err;
   }));
+});
+
+router.post("/subscribe", (req, res, next) => {
+  // console.log(req.body);
+  // sendSMS(447424124821, "text"); samo s moq raboti v momenta trial version e
+  // sendEmail("dkk6@kent.ac.uk", "subject", "htmlContent");
 });
 
 // this returns all flood areas polygon coordinates from the EA API

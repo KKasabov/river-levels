@@ -5,5 +5,10 @@
   "accessKey":"ttn-account-v2.mRzaS7HOchwKsQxdj1zD-KwjxXAptb7s9pca78Nv7_U",
   "host": "dragon.kent.ac.uk",
   "user": "ni60",
-  "pwd": "sul3lox"
+  "pwd": "sul3lox",
+  "nodemailer_service": "gmail",
+  "nodemailer_user": "floodalertskentuk@gmail.com",
+  "nodemailer_pwd": "762(}*ahfjkAf08f7",
+  "nexmo_apiKey": "55f668a2",
+  "nexmo_apiSecret": "8HABIV5hhsXgcyqu"
 }
