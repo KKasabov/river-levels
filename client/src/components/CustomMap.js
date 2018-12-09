@@ -1,16 +1,25 @@
 import React, { Component } from 'react';
 import L from 'leaflet';
 import { LayerGroup, LayersControl, ZoomControl, Map, TileLayer, Marker, Popup, withLeaflet, Tooltip, Polygon, GeoJSON } from 'react-leaflet';
+import Control from 'react-leaflet-control';
+import { withStyles } from '@material-ui/core/styles';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { connect } from "react-redux";
+import { connect} from "react-redux";
 import { getLocation, getAreasData } from "../actions/actions";
 import './CustomMap.css';
-import AddressControl from './AddressControl'
-
+import AddressControl from './AddressControl';
+import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import 'react-leaflet-markercluster/dist/styles.min.css';
-
 import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
+import Button from '@material-ui/core/Button';
+import { Values } from "redux-form-website-template";
+import getMuiTheme from "material-ui/styles/getMuiTheme";
+import showResults from "./showResults";
+import MaterialUiForm from "./MaterialUiForm";
+import PropTypes from 'prop-types';
+import Popover from '@material-ui/core/Popover';
+import Typography from '@material-ui/core/Typography';
 
 const sensorPositions = [
   [51.257785, 1.030079],
@@ -25,12 +34,21 @@ const sensorPositions = [
 
 const { BaseLayer, Overlay } = LayersControl
 
+const styles = theme => ({
+  typography: {
+    margin: theme.spacing.unit * 2,
+  },
+});
+
 class CustomMap extends Component {
   constructor(props) {
     super(props);
     this.state = {
       zoom: 12,
-      marker: {}
+      marker: {},
+      isSubscribeVisible: false,
+      subscribeButtonText: "Show Subscribe",
+      anchorEl: null,
     }
 
     this.myIcon = L.icon({
@@ -71,6 +89,8 @@ class CustomMap extends Component {
       this.refs.map.leafletElement.scrollWheelZoom.enable()
       this.refs.map.leafletElement.dragging.enable();
     }
+    // this.setState({isSubscribeVisible: true});
+    // this.forceUpdate();
   }
 
   componentDidUpdate(prevProps) {
@@ -193,12 +213,26 @@ createFloodAlertAreas(areas) {
           };
         }
 
+        getSubscribeFrom() {
+          return (
+
+              <MuiThemeProvider muiTheme={getMuiTheme()}>
+                <div style={{ padding: 15 }}>
+                  <MaterialUiForm onSubmit={showResults} />
+                </div>
+              </MuiThemeProvider>
+          );
+        }
+
         render() {
           const AddressSearch = withLeaflet(AddressControl);
+          const { classes } = this.props;
+          const { anchorEl } = this.state;
+          const open = Boolean(anchorEl);
           return (
             <Map
               className="map"
-              minZoom="4"
+              minZoom="3"
               maxZoom="19"
               center={this.props.location}
               zoom={this.state.zoom}
@@ -238,10 +272,54 @@ createFloodAlertAreas(areas) {
                   </LayerGroup>
                 </Overlay>
               </LayersControl>
+              <Control position="topleft" >
+                <div>
+                  <Button
+                    aria-owns={open ? 'Search for location first!' : undefined}
+                    aria-haspopup="true"
+                     variant="contained" color="primary" onClick={(event) => {
+                      if(this.state.marker.hasOwnProperty("options")) {
+                        this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
+                        this.setState({subscribeButtonText: (this.state.isSubscribeVisible ? "Show Subscribe" : "Hide Subscribe")});
+                      } else {
+                        this.setState({
+                              anchorEl: event.currentTarget,
+                            });
+                      }
+                    }}>
+                    {this.state.subscribeButtonText}
+                  </Button>
+                  <Popover
+                    id="simple-popper"
+                    open={open}
+                    anchorEl={anchorEl}
+                    onClose={() => {
+                      this.setState({
+                          anchorEl: null,
+                        });
+                    }}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'center',
+                    }}
+                    >
+                    <Typography className={classes.typography}>Search for location first!</Typography>
+                  </Popover>
+                </div>
+                {this.state.isSubscribeVisible && this.getSubscribeFrom()}
+              </Control>
             </Map>
           )
         }
       }
+
+      CustomMap.propTypes = {
+        classes: PropTypes.object.isRequired,
+      };
 
       const mapDispatchToProps = dispatch => {
         return {
@@ -260,4 +338,4 @@ createFloodAlertAreas(areas) {
         };
       };
 
-      export default connect(mapStateToProps, mapDispatchToProps)(CustomMap);
+      export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CustomMap));

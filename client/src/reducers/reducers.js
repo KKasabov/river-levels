@@ -1,4 +1,5 @@
 import {combineReducers} from 'redux'
+import { reducer as reduxFormReducer } from 'redux-form'
 import * as actions from '../actions/actions'
 
 const initialState = {
@@ -27,6 +28,7 @@ const getMapInputReducer = (state = initialState, action) => {
 };
 
 const rootReducer = combineReducers({
+   form: reduxFormReducer,
    getMapInputReducer
 })
 

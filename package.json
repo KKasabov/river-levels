@@ -23,6 +23,7 @@
     "concurrently": "^4.1.0"
   },
   "dependencies": {
-    "nexmo": "^2.4.0"
+    "nexmo": "^2.4.0",
+    "react-leaflet-control": "^2.0.0"
   }
 }
