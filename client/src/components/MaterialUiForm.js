@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import validate from "./validate";
 import PropTypes from 'prop-types';
 import TextField from "material-ui/TextField";
-import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -20,27 +19,10 @@ const renderTextField = ({
   ...custom
 }) => (
   <TextField
-    hintText={label}
+    hintText={label == "Phone" ? "e.g. 447111222333" : label}
     floatingLabelText={label}
     errorText={touched && error}
     {...input}
-    {...custom}
-  />
-);
-
-const renderSelectField = ({
-  input,
-  label,
-  meta: { touched, error },
-  children,
-  ...custom
-}) => (
-  <SelectField
-    floatingLabelText={label}
-    errorText={touched && error}
-    {...input}
-    onChange={(event, index, value) => input.onChange(value)}
-    children={children}
     {...custom}
   />
 );

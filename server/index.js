@@ -13,8 +13,8 @@ const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 const Nexmo = require('nexmo');
 
-const SUBSCRIBE_EMAIL_TEXT = "Hello!\nThanks for subscribing for the email flood alerts and warnings!"
-const SUBSCRIBE_SMS_TEXT = "Hello!\nThanks for subscribing for the SMS flood alerts and warnings!"
+const SUBSCRIBE_EMAIL_TEXT = "Hello!<br /><br />Thanks for subscribing to the email flood alerts and warnings!"
+const SUBSCRIBE_SMS_TEXT = "Hello!\n\nThanks for subscribing to the SMS flood alerts and warnings!\n\n"
 
 var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
