@@ -223,7 +223,9 @@ createFloodAlertAreas(areas) {
 
         attachLocationBeforeSubmit(genValues) {
           var newValues = {
-            genValues,
+            name: genValues.name,
+            email: genValues.email,
+            phone: genValues.phone,
             location: {
               lat: this.props.location[0],
               long: this.props.location[1]

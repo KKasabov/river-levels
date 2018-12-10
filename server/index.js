@@ -13,6 +13,9 @@ const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
 const Nexmo = require('nexmo');
 
+const SUBSCRIBE_EMAIL_TEXT = "Hello!\nThanks for subscribing for the email flood alerts and warnings!"
+const SUBSCRIBE_SMS_TEXT = "Hello!\nThanks for subscribing for the SMS flood alerts and warnings!"
+
 var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
 var queryHandler = require('./queryHandler');
@@ -255,8 +258,17 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
 
 router.post("/subscribe", (req, res, next) => {
   console.log(req.body);
-  // sendSMS(447424124821, "text"); samo s moq raboti v momenta trial version e
-  // sendEmail("dkk6@kent.ac.uk", "subject", "htmlContent");
+  if(req.body.hasOwnProperty("email")) {
+    sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
+  }
+  if(req.body.hasOwnProperty("phone")) {
+    sendSMS(req.body.phone, SUBSCRIBE_SMS_TEXT);
+  }
+
+  //TODO figure out what to do with the location coordinates
+
+  // sendSMS(447424124***, "text"); works only with pre-verified numbers, since it is a trial
+  // sendEmail("d**@kent.ac.uk", "subject", "htmlContent");
 });
 
 // this returns all flood areas polygon coordinates from the EA API
