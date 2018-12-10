@@ -6,6 +6,7 @@ import MarkerClusterGroup from 'react-leaflet-markercluster';
 import { connect} from "react-redux";
 import { getLocation, getAreasData } from "../actions/actions";
 import './CustomMap.css';
+import InfoDialog from './InfoDialog.js'
 import AddressControl from './AddressControl';
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import 'react-leaflet-markercluster/dist/styles.min.css';
@@ -13,7 +14,7 @@ import sensorMarker from '../resources/sensorMarker.png';
 import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import { Values } from "redux-form-website-template";
 import getMuiTheme from "material-ui/styles/getMuiTheme";
-import showResults from "./showResults";
+import sendResult from "./sendResult";
 import MaterialUiForm from "./MaterialUiForm";
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
@@ -47,8 +48,8 @@ class CustomMap extends Component {
       zoom: 12,
       marker: {},
       isSubscribeVisible: false,
-      subscribeButtonText: "Show Subscribe",
       anchorEl: null,
+      dialogOpen: false,
     }
 
     this.myIcon = L.icon({
@@ -214,10 +215,33 @@ createFloodAlertAreas(areas) {
           return (
               <MuiThemeProvider muiTheme={getMuiTheme()}>
                 <div style={{ padding: 15 }}>
-                  <MaterialUiForm onSubmit={showResults} />
+                  <MaterialUiForm onSubmit={this.attachLocationBeforeSubmit.bind(this)} />
                 </div>
               </MuiThemeProvider>
           );
+        }
+
+        attachLocationBeforeSubmit(genValues) {
+          var newValues = {
+            genValues,
+            location: {
+              lat: this.props.location[0],
+              long: this.props.location[1]
+            }
+          };
+          sendResult(newValues);
+          this.setState({
+            isSubscribeVisible: false
+          });
+          this.setState({
+            dialogOpen: true
+          });
+        }
+
+        onDialogClose() {
+          this.setState({
+            dialogOpen: false
+          });
         }
 
         render() {
@@ -235,6 +259,7 @@ createFloodAlertAreas(areas) {
               ref='map'
               zoomControl={false}>
               <ZoomControl position="topleft" />
+              <InfoDialog open={this.state.dialogOpen} onClose={this.onDialogClose.bind(this)}/>
               <AddressSearch />
               <LayersControl position="topright">
                 <BaseLayer checked={!this.props.isColorBlind} name="Default">
@@ -271,19 +296,19 @@ createFloodAlertAreas(areas) {
               <Control position="topleft" >
                 <div>
                   <Button
+                    ref='subscribeButton'
                     aria-owns={open ? 'Search for location first!' : undefined}
                     aria-haspopup="true"
                      variant="contained" color="primary" onClick={(event) => {
                       if(this.state.marker.hasOwnProperty("options")) {
                         this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
-                        this.setState({subscribeButtonText: (this.state.isSubscribeVisible ? "Show Subscribe" : "Hide Subscribe")});
                       } else {
                         this.setState({
                               anchorEl: event.currentTarget,
                             });
                       }
                     }}>
-                    {this.state.subscribeButtonText}
+                    Subscribe
                   </Button>
                   <Popover
                     id="simple-popper"

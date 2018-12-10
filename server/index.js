@@ -254,7 +254,7 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
 });
 
 router.post("/subscribe", (req, res, next) => {
-  // console.log(req.body);
+  console.log(req.body);
   // sendSMS(447424124821, "text"); samo s moq raboti v momenta trial version e
   // sendEmail("dkk6@kent.ac.uk", "subject", "htmlContent");
 });
