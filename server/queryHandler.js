@@ -30,5 +30,21 @@ module.exports = {
       if (err) throw err;
       console.log("1 record added to the log");
     });
+  },
+  addSubsriber: function(params) {
+    var sql = "INSERT INTO ni60.subscribers SET ?";
+    conn.query(sql, params, function(err, result) {
+      if (err) throw err;
+      console.log("1 record added to the log");
+    });
+  },
+  getSubscribers: function() {
+    return new Promise(function(resolve, reject) {
+      var sql = "SELECT latitude, longitude, county, name, email, contactNumber FROM ni60.subscribers";
+      conn.query(sql, function(err, result) {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
   }
 }

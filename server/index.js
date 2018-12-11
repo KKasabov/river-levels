@@ -33,7 +33,9 @@ var nodemailer_pwd = options.storageConfig.nodemailer_pwd;
 var nexmo_apiKey = options.storageConfig.nexmo_apiKey;
 var nexmo_apiSecret = options.storageConfig.nexmo_apiSecret;
 router.use(bodyParser.json()); // support json encoded bodies
-router.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+router.use(bodyParser.urlencoded({
+  extended: true
+})); // support encoded bodies
 
 var mqtt_options = {
   port: port,
@@ -47,11 +49,11 @@ const nexmo = new Nexmo({
 })
 
 var transporter = nodemailer.createTransport({
- service: nodemailer_service,
- auth: {
-        user: nodemailer_user,
-        pass: nodemailer_pwd
-    }
+  service: nodemailer_service,
+  auth: {
+    user: nodemailer_user,
+    pass: nodemailer_pwd
+  }
 });
 
 const client = mqtt.connect(host, mqtt_options);
@@ -65,14 +67,14 @@ function sendEmail(to, subject, htmlContent) {
     from: 'floodalertskentuk@gmail.com', // sender address
     to, // list of receivers
     subject, // Subject line
-    html: htmlContent// plain text body
+    html: htmlContent // plain text body
   };
 
-  transporter.sendMail(mailOptions, function (err, info) {
-     if(err)
-       console.log(err)
-     else
-       console.log(info);
+  transporter.sendMail(mailOptions, function(err, info) {
+    if (err)
+      console.log(err)
+    else
+      console.log(info);
   });
 }
 
@@ -193,33 +195,32 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
     }));
 }
 //NOTE EXAMPLE:
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2)
+getNearestGovStations('51.280233', '1.0789089', 5, 'level', 5)
   .then(result => {
-    console.log(result);
+    // console.log(result);
     var promises = [];
     result.map(stationReference => {
       promises.push(getLatestData(stationReference));
     });
     Promise.all(promises).then(data => {
-      console.log(data);
+      // console.log(data);
     })
   }).catch((err) => setImmediate(() => {
     throw err;
   }));
 
 getLatestData('E3826').then(result => {
-  console.log(result);
+  // console.log(result);
   return result;
 }).catch((err) => setImmediate(() => {
   throw err;
 }));
 
-//TODO write a function which gets the latest data from a given gov sensor
 
 //get the latest reading for a given sensor
 queryHandler.getLatestReading(sensor_f3).then(function(rows) {
-  console.log("Latest reading is " +
-    rows[0].distanceToSensor + " from " + rows[0].timestamp);
+  // console.log("Latest reading is " +
+  //   rows[0].distanceToSensor + " from " + rows[0].timestamp);
 }).catch((err) => setImmediate(() => {
   throw err;
 })); // Throw async to escape the promise chain
@@ -249,27 +250,45 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
     queryHandler.getLatestReading(req.params.deviceId) :
     queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
-    res.json(rows);
-  })
-  .catch((err) => setImmediate(() => {
-    throw err;
-  }));
+      res.json(rows);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
 });
 
 router.post("/subscribe", (req, res, next) => {
   console.log(req.body);
-  if(req.body.hasOwnProperty("email")) {
-    sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
-  }
-  if(req.body.hasOwnProperty("phone")) {
-    sendSMS(req.body.phone, SUBSCRIBE_SMS_TEXT);
-  }
+  // if(req.body.hasOwnProperty("email")) {
+  //   sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
+  // }
+  // if(req.body.hasOwnProperty("phone")) {
+  //   sendSMS(req.body.phone, SUBSCRIBE_SMS_TEXT);
+  // }
+
+  var params = {
+    latitude: req.body.location.lat,
+    longitude: req.body.location.long,
+    county: 'Kent',
+    name: req.body.name,
+    email: req.body.email,
+    contactNumber: req.body.phone
+  };
+
+  queryHandler.addSubsriber(params);
 
   //TODO figure out what to do with the location coordinates
 
   // sendSMS(447424124***, "text"); works only with pre-verified numbers, since it is a trial
   // sendEmail("d**@kent.ac.uk", "subject", "htmlContent");
 });
+
+queryHandler.getSubscribers().then(result => {
+  console.log(result);
+  return result;
+}).catch((err) => setImmediate(() => {
+  throw err;
+}));
 
 // this returns all flood areas polygon coordinates from the EA API
 router.get("/getFloodAreas", (req, res) => {
@@ -281,15 +300,16 @@ router.get("/getFloodAreas", (req, res) => {
     'https://environment.data.gov.uk/flood-monitoring/id/floods' :
     'https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=51.2802&long=1.0789&dist=5');
 
-  request(url, { json: true })
+  request(url, {
+      json: true
+    })
     .then(function(body) {
       items = body.items;
       // extract polygon objects from response
       body.items.forEach(area => {
-        if(req.query.current) {
+        if (req.query.current) {
           areasURLs.push(area.floodArea.polygon);
-        }
-        else {
+        } else {
           areasURLs.push(area.polygon);
         }
       })
