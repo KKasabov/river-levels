@@ -4,7 +4,7 @@ var configArr = options.storageConfig; //An array with the credentials
 var conn = dbConn.getDbConnecton(configArr.host, configArr.user, configArr.pwd); //The database connection
 
 module.exports = {
-  getLatestReading: function(dev_id) {
+  getLatestLocalReading: function(dev_id) {
     return new Promise(function(resolve, reject) {
       var params = [dev_id];
       var sql = "SELECT MAX(timestamp) AS timestamp, waterLevel FROM ni60.localDataLog WHERE devID = ?";
@@ -14,7 +14,7 @@ module.exports = {
       });
     });
   },
-  getDataForPeriod: function(dev_id, dateFrom, dateTo) {
+  getLocalDataForPeriod: function(dev_id, dateFrom, dateTo) {
     return new Promise(function(resolve, reject) {
       var params = [dev_id, dateFrom, dateTo];
       var sql = "SELECT timestamp, waterLevel FROM ni60.localDataLog WHERE devID = ? AND (CAST(timestamp AS DATE) BETWEEN ? AND ?)";
@@ -24,7 +24,7 @@ module.exports = {
       });
     });
   },
-  insertLogRecord: function(params) {
+  insertLocalDataRecord: function(params) {
     var sql = "INSERT INTO ni60.localDataLog SET ?";
     conn.query(sql, params, function(err, result) {
       if (err) throw err;
