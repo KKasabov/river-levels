@@ -24,14 +24,20 @@ const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001
 const CALLBACK_INTERVAL_MILLISECONDS = 900000;
 
 class App extends Component {
-  state  = {
-    currentLocation: [],
-    tabIndex: 0,
-    sensor_f3_reading: "",
-    sensor_45_reading: "",
-    sensor_E3951_reading: "",
-    sensor_E4060_reading: "",
-    sensor_E3966_reading: ""
+
+  constructor(props) {
+    super(props);
+    this.state  = {
+      currentLocation: [],
+      tabIndex: 0,
+      sensor_f3_reading: "",
+      sensor_45_reading: "",
+      sensor_E3951_reading: "",
+      sensor_E4060_reading: "",
+      sensor_E3966_reading: ""
+    }
+
+    this.interval;
   }
 
   handleChange = (event, value) => {
@@ -52,7 +58,11 @@ class App extends Component {
 
   componentDidMount() {
     this.getSensorData();
-    setInterval(this.getSensorData.bind(this), CALLBACK_INTERVAL_MILLISECONDS);
+    this.interval = setInterval(this.getSensorData.bind(this), CALLBACK_INTERVAL_MILLISECONDS);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
   }
 
   getSensorData() {
