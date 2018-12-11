@@ -97,7 +97,7 @@ client.on('connect', () => {
       var distance_sensor_from_river_bed;
       var distance_flood_plain_from_river_bed;
 
-      switch (payload.devID) {
+      switch (payload.dev_id) {
         case sensor_45:
           distance_sensor_from_river_bed = distance_sensor_from_river_bed_sensor_45;
           distance_flood_plain_from_river_bed = distance_flood_plain_from_river_bed_sensor_45;
@@ -109,6 +109,7 @@ client.on('connect', () => {
       }
 
       //TODO handle the 300mm difference
+      //TODO distance_sensor_from_river_bed - latest_reading
       if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
         console.log('SHIIT FLOOD GET THE BOAT');
         floodAlert = true;
@@ -116,10 +117,12 @@ client.on('connect', () => {
         console.log('NO flood');
       }
 
+      var waterLvl = distance_sensor_from_river_bed - distance;
       var params = {
         timestamp: payload.metadata.time,
-        dev_id: payload.dev_id,
-        distanceToSensor: distance
+        devID: payload.dev_id,
+        distanceToSensor: distance,
+        waterLevel: waterLvl
       };
 
       queryHandler.insertLogRecord(params);
@@ -133,7 +136,7 @@ function getLatestData(stationReference) {
       json: true
     })
     .then(function(data) {
-      return data.items[0].latestReading.value;
+      return {ref: stationReference, val: data.items[0].latestReading.value};
     }).catch((err) => setImmediate(() => {
       throw err;
     }));
@@ -187,6 +190,7 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       for (var i = 0; i < sortedDistances.length; i++) {
         stations.push(sortedDistances[i][0]);
       }
+
       return stations.slice(0, noOfResults);
 
     })
@@ -194,39 +198,35 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
       throw err;
     }));
 }
+
 //NOTE EXAMPLE:
 getNearestGovStations('51.280233', '1.0789089', 5, 'level', 5)
   .then(result => {
-    // console.log(result);
     var promises = [];
     result.map(stationReference => {
       promises.push(getLatestData(stationReference));
     });
     Promise.all(promises).then(data => {
-      // console.log(data);
+      console.log(data);
     })
   }).catch((err) => setImmediate(() => {
     throw err;
   }));
 
 getLatestData('E3826').then(result => {
-  // console.log(result);
   return result;
 }).catch((err) => setImmediate(() => {
   throw err;
 }));
 
 
-//get the latest reading for a given sensor
-queryHandler.getLatestReading(sensor_f3).then(function(rows) {
-  // console.log("Latest reading is " +
-  //   rows[0].distanceToSensor + " from " + rows[0].timestamp);
-}).catch((err) => setImmediate(() => {
-  throw err;
-})); // Throw async to escape the promise chain
-
-
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 2);
+// //get the latest reading for a given sensor
+// queryHandler.getLatestReading(sensor_f3).then(function(rows) {
+//   // console.log("Latest reading is " +
+//   //   rows[0].distanceToSensor + " from " + rows[0].timestamp);
+// }).catch((err) => setImmediate(() => {
+//   throw err;
+// })); // Throw async to escape the promise chain
 
 function getPolygonData(urls) {
   let polygonCoordinates = [];
@@ -275,7 +275,7 @@ router.post("/subscribe", (req, res, next) => {
     contactNumber: req.body.phone
   };
 
-  queryHandler.addSubsriber(params);
+  queryHandler.addSubscriber(params);
 
   //TODO figure out what to do with the location coordinates
 
@@ -284,7 +284,7 @@ router.post("/subscribe", (req, res, next) => {
 });
 
 queryHandler.getSubscribers().then(result => {
-  console.log(result);
+  // console.log(result);
   return result;
 }).catch((err) => setImmediate(() => {
   throw err;
