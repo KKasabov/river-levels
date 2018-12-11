@@ -137,6 +137,8 @@ buck-out/
 
 # FuseBox cache
 
+server/.eslintrc.json
+
 ### ReactNative.Linux Stack ###
 *~
 
