@@ -23,14 +23,15 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 
 const sensorPositions = [
-  [51.257785, 1.030079],
-  [51.258144, 1.145929],
-  [51.296693, 1.105983],
-  [51.258867, 1.033447],
-  [51.297928, 1.053239],
-  [51.296461, 1.129525],
-  [51.278570, 1.0770049],
-  [51.280064, 1.0733199],
+  [51.257785, 1.030079], //E3951 Water level
+  [51.258144, 1.145929], //E4060 Water level
+  [51.295660, 1.088238], //E3966 Water level
+
+  [51.258867, 1.033447], //E4080 Reinfall
+  [51.297928, 1.053239], //E4090 Reinfall
+
+  [51.278570, 1.0770049], //MQTT F3
+  [51.280064, 1.0733199], //MQTT 45
 ];
 
 const { BaseLayer, Overlay } = LayersControl
@@ -172,7 +173,19 @@ createFloodAlertAreas(areas) {
             mouseout: this.resetHighlight.bind(this)
           });
           if (feature.properties && feature.properties.DESCRIP) {
-            layer.bindPopup(feature.properties.DESCRIP);
+            var arr1 = this.props.currentAlertAreasItems.filter(el => {
+              return el.floodAreaID == feature.properties.FWS_TACODE
+            });
+            var arr2 = this.props.floodAlertAreasItems.filter(el => {
+              return el.notation == feature.properties.FWS_TACODE
+            });
+            var txt= "";
+            if(arr1.length > 0) {
+              txt = arr1[0].description + "<br /><br />Severity: " + arr1[0].severity + "<br /> Level: " + arr1[0].severityLevel;
+            } else if(arr2.length > 0) {
+              txt = arr2[0].label;
+            }
+            layer.bindPopup(txt);
           }
         }
 
@@ -283,14 +296,13 @@ createFloodAlertAreas(areas) {
                 <Overlay checked name="Sensors">
                   <LayerGroup>
                     <MarkerClusterGroup>
-                      {this.createSensorMarkers(sensorPositions[0], "Reading_EA_0")}
-                      {this.createSensorMarkers(sensorPositions[1], "Reading_EA_1")}
-                      {this.createSensorMarkers(sensorPositions[2], "Reading_EA_2")}
-                      {this.createSensorMarkers(sensorPositions[3], "Reading_EA_3")}
-                      {this.createSensorMarkers(sensorPositions[4], "Reading_EA_4")}
-                      {this.createSensorMarkers(sensorPositions[5], "Reading_EA_5")}
-                      {this.createSensorMarkers(sensorPositions[6], this.props.sensor_f3_reading)}
-                      {this.createSensorMarkers(sensorPositions[7], this.props.sensor_45_reading)}
+                      {this.createSensorMarkers(sensorPositions[0], "Water E3951")}
+                      {this.createSensorMarkers(sensorPositions[1], "Water E4060")}
+                      {this.createSensorMarkers(sensorPositions[2], "Water E3966")}
+                      {this.createSensorMarkers(sensorPositions[3], "Reinfall E4080")}
+                      {this.createSensorMarkers(sensorPositions[4], "Reinfall E4090")}
+                      {this.createSensorMarkers(sensorPositions[5], this.props.sensor_f3_reading)}
+                      {this.createSensorMarkers(sensorPositions[6], this.props.sensor_45_reading)}
                     </MarkerClusterGroup>
                   </LayerGroup>
                 </Overlay>
