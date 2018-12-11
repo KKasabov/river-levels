@@ -125,7 +125,7 @@ client.on('connect', () => {
         waterLevel: waterLvl
       };
 
-      queryHandler.insertLogRecord(params);
+      queryHandler.insertLocalDataRecord(params);
       floodAlert = false;
     });
   });
@@ -221,7 +221,7 @@ getLatestData('E3826').then(result => {
 
 
 // //get the latest reading for a given sensor
-// queryHandler.getLatestReading(sensor_f3).then(function(rows) {
+// queryHandler.getLatestLocalReading(sensor_f3).then(function(rows) {
 //   // console.log("Latest reading is " +
 //   //   rows[0].distanceToSensor + " from " + rows[0].timestamp);
 // }).catch((err) => setImmediate(() => {
@@ -247,8 +247,8 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
   // if start and end date have not been passed as parameters
   // then we need to return the latest reading
   let funCall = ((!req.params.startDate || !req.params.endDate) ?
-    queryHandler.getLatestReading(req.params.deviceId) :
-    queryHandler.getDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
+    queryHandler.getLatestLocalReading(req.params.deviceId) :
+    queryHandler.getLocalDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
       res.json(rows);
     })
