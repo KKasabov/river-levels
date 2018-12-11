@@ -21,20 +21,24 @@ import Tab from '@material-ui/core/Tab';
 
 const sensor_f3 = "lairdc0ee4000010109f3"; //The sensor with id 'lairdc0ee4000010109f3'
 const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001012345'
+const CALLBACK_INTERVAL_MILLISECONDS = 900000;
 
 class App extends Component {
   state  = {
     currentLocation: [],
     tabIndex: 0,
     sensor_f3_reading: "",
-    sensor_45_reading: ""
+    sensor_45_reading: "",
+    sensor_E3951_reading: "",
+    sensor_E4060_reading: "",
+    sensor_E3966_reading: ""
   }
 
   handleChange = (event, value) => {
    this.setState({ tabIndex: value });
   };
 
-  getSensorReading = (deviceName) => {
+  getSensorReading(deviceName) {
     var that = this;
     let deviceId = ((deviceName === 'sensor_f3') ? sensor_f3 : sensor_45);
     fetch("/api/getData/" + deviceId)
@@ -47,8 +51,16 @@ class App extends Component {
   }
 
   componentDidMount() {
+    this.getSensorData();
+    setInterval(this.getSensorData.bind(this), CALLBACK_INTERVAL_MILLISECONDS);
+  }
+
+  getSensorData() {
     this.getSensorReading('sensor_f3');
     this.getSensorReading('sensor_45');
+    this.getSensorReading('E3951');
+    this.getSensorReading('E4060');
+    this.getSensorReading('E3966');
   }
 
   render() {
@@ -81,7 +93,13 @@ class App extends Component {
             </IconButton>
           </Toolbar>
         </AppBar>
-        {this.state.tabIndex === 0 && <HomePage sensor_f3_reading={this.state.sensor_f3_reading} sensor_45_reading={this.state.sensor_45_reading} />}
+        {this.state.tabIndex === 0 && <HomePage
+           sensor_f3_reading={this.state.sensor_f3_reading}
+           sensor_45_reading={this.state.sensor_45_reading}
+           sensor_E3951_reading={this.state.sensor_E3951_reading}
+           sensor_E4060_reading={this.state.sensor_E4060_reading}
+           sensor_E3966_reading={this.state.sensor_E3966_reading}
+           />}
         {this.state.tabIndex === 1 &&
           <div>
             <CurrentRiverLevelPage

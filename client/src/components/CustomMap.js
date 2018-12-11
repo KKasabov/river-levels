@@ -277,10 +277,10 @@ createFloodAlertAreas(areas) {
               <InfoDialog open={this.state.dialogOpen} onClose={this.onDialogClose.bind(this)}/>
               <AddressSearch />
               <LayersControl position="topright">
-                <BaseLayer checked={!this.props.isColorBlind} name="Default">
+                <BaseLayer checked name="Default">
                   <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 </BaseLayer>
-                <BaseLayer checked={this.props.isColorBlind} name="Black And White">
+                <BaseLayer name="Black And White">
                   <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png" />
                 </BaseLayer>
                 <Overlay checked name="Active Alerts in UK">
@@ -296,11 +296,9 @@ createFloodAlertAreas(areas) {
                 <Overlay checked name="Sensors">
                   <LayerGroup>
                     <MarkerClusterGroup>
-                      {this.createSensorMarkers(sensorPositions[0], "Water E3951")}
-                      {this.createSensorMarkers(sensorPositions[1], "Water E4060")}
-                      {this.createSensorMarkers(sensorPositions[2], "Water E3966")}
-                      {this.createSensorMarkers(sensorPositions[3], "Reinfall E4080")}
-                      {this.createSensorMarkers(sensorPositions[4], "Reinfall E4090")}
+                      {this.createSensorMarkers(sensorPositions[0], this.props.sensor_E3951_reading)}
+                      {this.createSensorMarkers(sensorPositions[1], this.props.sensor_E4060_reading)}
+                      {this.createSensorMarkers(sensorPositions[2], this.props.sensor_E3966_reading)}
                       {this.createSensorMarkers(sensorPositions[5], this.props.sensor_f3_reading)}
                       {this.createSensorMarkers(sensorPositions[6], this.props.sensor_45_reading)}
                     </MarkerClusterGroup>
