@@ -268,10 +268,10 @@ cron.schedule('0 0 9 * * *', function() {
             txt.append("No alerts or warning around you!<br /><br />");
           }
           txt.append("Stay dry,<br />floodalertskentuk");
-          if(phone !== null) {
+          if(email !== null) {
             sendEmail(email, "Flood Alerts And Warning", txt.toString());
           }
-          if(email !== null) {
+          if(phone !== null) {
             sendSMS(phone, txt.toString());
           }
         }).catch((err) => setImmediate(() => {
@@ -282,6 +282,42 @@ cron.schedule('0 0 9 * * *', function() {
     throw err;
   }));
 });
+
+testRequest(email, lat, long) {
+  request('https://environment.data.gov.uk/flood-monitoring/id/floods/?lat=' + lat + '&long=' + long + '&dist=5', {
+      json: true
+    }).then((data) => {
+      var a;
+      var items = data.items;
+      let txt = new StringBuilder();
+      txt.append("Hello!<br /><br />");
+      txt.append("This is a TEST email about warnings and alerts in the area of 5 km from the given coordinates.<br /><br />");
+      if(items.length > 0) {
+        for(a = 0; a < items.length; a++) {
+          txt.append("Description: ")
+          txt.append(items[a].description);
+          txt.append("<br /><br />")
+          txt.append("Message: ")
+          txt.append(items[a].message);
+          txt.append("<br /><br />")
+          txt.append("Severity: ")
+          txt.append(items[a].severity);
+          txt.append("<br /><br />")
+          txt.append("Severity Level: ")
+          txt.append(items[a].severityLevel);
+          txt.append("<br /><br /><br />")
+        }
+      } else {
+        txt.append("TEST: No alerts or warning around you!<br /><br />");
+      }
+      txt.append("Stay dry,<br />floodalertskentuk");
+      if(email !== null) {
+        sendEmail(email, "Flood Alerts And Warning", txt.toString());
+      }
+    }).catch((err) => setImmediate(() => {
+      throw err;
+    }));
+}
 
 //example use of getLatestEnvAgencyReading
 queryHandler.getLatestEnvAgencyReading('E3966').then(result => {
@@ -342,7 +378,6 @@ router.get("/getEAData/:deviceId/:startDate?/:endDate?", (req, res) => {
 });
 
 router.post("/subscribe", (req, res, next) => {
-  console.log(req.body);
   if(req.body.hasOwnProperty("email")) {
     sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
   }
@@ -363,6 +398,12 @@ router.post("/subscribe", (req, res, next) => {
 
   // sendSMS(447424124***, "text"); works only with pre-verified numbers, since it is a trial
   // sendEmail("d**@kent.ac.uk", "subject", "htmlContent");
+});
+
+router.post("/test", (req, res, next) => {
+  if(req.body.hasOwnProperty("email") && req.body.hasOwnProperty("lat") && req.body.hasOwnProperty("long")) {
+    testRequest(req.body.email, req.body.lat, req.body.long);
+  }
 });
 
 queryHandler.getSubscribers().then(result => {
