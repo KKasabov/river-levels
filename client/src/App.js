@@ -32,9 +32,9 @@ class App extends Component {
       tabIndex: 0,
       sensor_f3_reading: "",
       sensor_45_reading: "",
-      sensor_E3951_reading: "",
-      sensor_E4060_reading: "",
-      sensor_E3966_reading: ""
+      E3951_reading: "",
+      E4060_reading: "",
+      E3966_reading: ""
     }
 
     this.interval;
@@ -46,13 +46,25 @@ class App extends Component {
 
   getSensorReading(deviceName) {
     var that = this;
-    let deviceId = ((deviceName === 'sensor_f3') ? sensor_f3 : sensor_45);
-    fetch("/api/getData/" + deviceId)
+    let deviceId, route;
+    route = "/api/getData/";
+    if(deviceName === 'sensor_f3') {
+      deviceId = sensor_f3;
+    } else if(deviceName === 'sensor_45') {
+      deviceId = sensor_45;
+    } else {
+      deviceId = deviceName;
+      route = "/api/getEAData/"
+    }
+    fetch(route + deviceName)
       .then(res => {
         return res.json();
       })
       .then(function(parsedData) {
-        that.setState({[deviceName + "_reading"]: parsedData[0].distanceToSensor});
+        console.log(parsedData);
+        let a = deviceName + "_reading";
+        console.log(a);
+          that.setState({a: parsedData[0].readingValue});
       })
   }
 

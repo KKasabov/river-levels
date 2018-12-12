@@ -284,6 +284,18 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
     }));
 });
 
+// this is our get method
+// this method fetches all available data in our database
+router.get("/getEAData/:deviceId", (req, res) => {
+  let funCall = queryHandler.getLatestEnvAgencyReading(req.params.deviceId)
+  funCall.then(function(rows) {
+      res.json(rows);
+    })
+    .catch((err) => setImmediate(() => {
+      throw err;
+    }));
+});
+
 router.post("/subscribe", (req, res, next) => {
   console.log(req.body);
   // if(req.body.hasOwnProperty("email")) {
