@@ -32,6 +32,7 @@ const sensorPositions = [
 
   [51.278570, 1.0770049], //MQTT F3
   [51.280064, 1.0733199], //MQTT 45
+  [51.296461, 1.129525] //E3826 Water level
 ];
 
 const SEVERITY_LEVEL_MEANING = [
@@ -328,6 +329,7 @@ createGEOjsonAreas(areas, isAlert) {
                   {this.createSensorMarkers(sensorPositions[2], this.props.sensor_E3966_reading)}
                   {this.createSensorMarkers(sensorPositions[5], this.props.sensor_f3_reading)}
                   {this.createSensorMarkers(sensorPositions[6], this.props.sensor_45_reading)}
+                  {this.createSensorMarkers(sensorPositions[7], this.props.sensor_E3826_reading)}
                 </MarkerClusterGroup>
               </LayerGroup>
             </Overlay>
