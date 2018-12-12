@@ -27,7 +27,8 @@ class App extends Component {
       sensor_45_reading: "",
       E3951_reading: "",
       E4060_reading: "",
-      E3966_reading: ""
+      E3966_reading: "",
+      E3826_reading: "",
     }
 
     this.interval;
@@ -77,6 +78,7 @@ class App extends Component {
     this.getSensorReading('E3951');
     this.getSensorReading('E4060');
     this.getSensorReading('E3966');
+    this.getSensorReading('E3826');
   }
 
   render() {
@@ -110,6 +112,7 @@ class App extends Component {
            sensor_E3951_reading={this.state.E3951_reading}
            sensor_E4060_reading={this.state.E4060_reading}
            sensor_E3966_reading={this.state.E3966_reading}
+           sensor_E3826_reading={this.state.E3826_reading}
            />}
         {this.state.tabIndex === 1 &&
           <div>
@@ -119,7 +122,8 @@ class App extends Component {
                 {"sensorID": sensor_45, "latestReading": this.state.sensor_45_reading},
                 {"sensorID": "E3951", "latestReading": this.state.E3951_reading},
                 {"sensorID": "E4060", "latestReading": this.state.E4060_reading},
-                {"sensorID": "E3966", "latestReading": this.state.E3966_reading}
+                {"sensorID": "E3966", "latestReading": this.state.E3966_reading},
+                {"sensorID": "E3826", "latestReading": this.state.E3826_reading}
               ]}
             />
           </div>
