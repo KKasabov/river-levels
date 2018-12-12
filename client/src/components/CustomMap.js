@@ -65,6 +65,8 @@ class CustomMap extends Component {
       zoom: 12,
       marker: {},
       isSubscribeVisible: false,
+      isTestVisible: false,
+      anchorEl_T: null,
       anchorEl: null,
       dialogOpen: false,
     }
@@ -257,6 +259,10 @@ createGEOjsonAreas(areas, isAlert) {
       );
     }
 
+    getTestForm() {
+
+    }
+
     //mediator for the submit button
     //attaches the current coordinates to the
     //submit object
@@ -291,6 +297,7 @@ createGEOjsonAreas(areas, isAlert) {
       const AddressSearch = withLeaflet(AddressControl);
       const { classes } = this.props;
       const { anchorEl } = this.state;
+      const { anchorEl_T } = this.state;
       const open = Boolean(anchorEl);
       return (
         <Map
@@ -372,7 +379,45 @@ createGEOjsonAreas(areas, isAlert) {
                 <Typography className={classes.typography}>Search for location first!</Typography>
               </Popover>
             </div>
+            <div>
+              <Button
+                ref='testButton'
+                aria-owns={open ? 'Search for location first!' : undefined}
+                aria-haspopup="true"
+                variant="contained" color="primary" onClick={(event) => {
+                  if(this.state.marker.hasOwnProperty("options")) {
+                    this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
+                  } else {
+                    this.setState({
+                      anchorEl_T: event.currentTarget,
+                    });
+                  }
+                }}>
+                Test
+              </Button>
+              <Popover
+                id="simple-popper"
+                open={open}
+                anchorEl={anchorEl_T}
+                onClose={() => {
+                  this.setState({
+                    anchorEl_T: null,
+                  });
+                }}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+                >
+                <Typography className={classes.typography}>Search for location first!</Typography>
+              </Popover>
+            </div>
             {this.state.isSubscribeVisible && this.getSubscribeFrom()}
+            {this.state.isTestVisible && this.getTestForm()}
           </Control>
         </Map>
       )
