@@ -117,6 +117,9 @@ class App extends Component {
               sensorReadings={[
                 {"sensorID": sensor_f3, "latestReading": this.state.sensor_f3_reading},
                 {"sensorID": sensor_45, "latestReading": this.state.sensor_45_reading},
+                {"sensorID": "E3951", "latestReading": this.state.E3951_reading},
+                {"sensorID": "E4060", "latestReading": this.state.E4060_reading},
+                {"sensorID": "E3966", "latestReading": this.state.E3966_reading}
               ]}
             />
           </div>
