@@ -15,7 +15,9 @@ import sensorMarkerCBlind from '../resources/sensorMarkerCBlind.png';
 import { Values } from "redux-form-website-template";
 import getMuiTheme from "material-ui/styles/getMuiTheme";
 import sendResult from "./sendResult";
+import sendResult_T from "./sendResult_T";
 import MaterialUiForm from "./MaterialUiForm";
+import MaterialUiForm_T from "./MaterialUiForm_T";
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
@@ -260,7 +262,25 @@ createGEOjsonAreas(areas, isAlert) {
     }
 
     getTestForm() {
+      return (
+        <MuiThemeProvider muiTheme={getMuiTheme()}>
+          <div style={{ padding: 15 }}>
+            <MaterialUiForm_T onSubmit={this.attachLocationBeforeSubmit_T.bind(this)} />
+          </div>
+        </MuiThemeProvider>
+      );
+    }
 
+    attachLocationBeforeSubmit_T(genValues) {
+      var newValues = {
+        email: genValues.email,
+        lat: this.props.location[0],
+        long: this.props.location[1]
+      };
+      sendResult_T(newValues);
+      this.setState({
+        isTestVisible: false
+      });
     }
 
     //mediator for the submit button
@@ -299,6 +319,7 @@ createGEOjsonAreas(areas, isAlert) {
       const { anchorEl } = this.state;
       const { anchorEl_T } = this.state;
       const open = Boolean(anchorEl);
+      const open_T = Boolean(anchorEl_T);
       return (
         <Map
           className="map"
@@ -344,6 +365,7 @@ createGEOjsonAreas(areas, isAlert) {
           <Control position="topleft" >
             <div>
               <Button
+                style={{margin: "15px"}}
                 ref='subscribeButton'
                 aria-owns={open ? 'Search for location first!' : undefined}
                 aria-haspopup="true"
@@ -379,6 +401,10 @@ createGEOjsonAreas(areas, isAlert) {
                 <Typography className={classes.typography}>Search for location first!</Typography>
               </Popover>
             </div>
+
+
+
+
             <div>
               <Button
                 ref='testButton'
@@ -386,7 +412,7 @@ createGEOjsonAreas(areas, isAlert) {
                 aria-haspopup="true"
                 variant="contained" color="primary" onClick={(event) => {
                   if(this.state.marker.hasOwnProperty("options")) {
-                    this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
+                    this.setState({isTestVisible: !this.state.isTestVisible});
                   } else {
                     this.setState({
                       anchorEl_T: event.currentTarget,
@@ -397,7 +423,7 @@ createGEOjsonAreas(areas, isAlert) {
               </Button>
               <Popover
                 id="simple-popper"
-                open={open}
+                open={open_T}
                 anchorEl={anchorEl_T}
                 onClose={() => {
                   this.setState({
