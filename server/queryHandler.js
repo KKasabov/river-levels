@@ -10,9 +10,6 @@ module.exports = {
       var sql = "SELECT MAX(timestamp) AS timestamp, waterLevel FROM ni60.localDataLog WHERE devID = ?";
       conn.query(sql, params, function(err, result) {
         if (err) return reject(err);
-        console.log(dev_id);
-        console.log("queryHandler");
-        console.log(result)
         resolve(result);
       });
     });
