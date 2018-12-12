@@ -41,6 +41,13 @@ const SEVERITY_LEVEL_MEANING = [
   "The warning is no longer in force.",
 ]
 
+const ADVICES_FOR_SERVERITY = [
+  "Find safe shelter right away!<br />Do not walk, swim, or drive through flood waters.<br />Stay off of bridges over fast-moving water.<br />Determine how best to protect yourself based on the type of flooding.",
+  "Stay informed! Immediately prepare for flooding!<br />Protect yourself at all times.Get an emergency kit.",
+  "Check for local flood warnings.<br/ >Inform other about the risk.<br />Move vehicles to higher ground.<br />Turn off the mains power before you leave.<br />Take all pets with you when you leave so they aren’t trapped by rising water.",
+  "The warning is not in force.<br />Stay informerd."
+];
+
 const { BaseLayer, Overlay } = LayersControl
 
 const styles = theme => ({
@@ -136,7 +143,7 @@ createSensorMarkers(position, reading) {
       icon={this.myIcon}
       >
       <Tooltip>
-        {reading}
+      <strong>Water Level:</strong> {reading}mm
       </Tooltip>
     </Marker>
   );
@@ -183,8 +190,9 @@ createGEOjsonAreas(areas, isAlert) {
         if(arr1.length > 0) {
           var el = arr1[0]
           var level = el.severityLevel;
-          txt = el.description + "<br /><br />Severity: " + el.severity + "<br /> Level: " + level +
-          "<br />Meaning: " + SEVERITY_LEVEL_MEANING[level - 1];
+          txt = "<strong>Area:</strong> " + el.description + "<br /><br /><br /><strong>Severity:</strong> " + el.severity + "<br /><br /><strong>Level:</strong> " + level +
+          "<br /><br /><strong>Meaning:</strong> " + SEVERITY_LEVEL_MEANING[level - 1] +
+          "<br /><br /><strong>Advice:</strong> " + ADVICES_FOR_SERVERITY[level - 1];
         } else if(arr2.length > 0) {
           txt = arr2[0].label;
         }
