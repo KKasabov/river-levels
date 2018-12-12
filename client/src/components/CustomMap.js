@@ -42,6 +42,7 @@ const styles = theme => ({
   },
 });
 
+//The map to be rendered on the home page
 class CustomMap extends Component {
   constructor(props) {
     super(props);
@@ -62,18 +63,11 @@ class CustomMap extends Component {
   }
 
   componentDidMount() {
-    // console.log(this.refs.map.leafletElement);
-    this.refs.map.leafletElement.on('baselayerchange', function(e) {
-      if(e.name == "Default") {
-        console.log("c");
-      } else {
-        //black & white
-        console.log("bw");
-      }
-    });
+    //event listeners for when a location is plotted on the map
     this.refs.map.leafletElement.on('geosearch/showlocation', (e) => {
       this.handleLocationFound(false, e.target._targets);
     });
+    //listener for marker drag
     this.refs.map.leafletElement.on('geosearch/marker/dragend', (e) => {
       this.handleLocationFound(true, e.target._targets);
     });
@@ -86,6 +80,7 @@ class CustomMap extends Component {
   componentWillUnmount() {
   }
 
+  //updates the state of the user's home position in the store
   handleLocationFound(isDragged, targets) {
     let arr;
     if(!isDragged) {
@@ -126,6 +121,7 @@ class CustomMap extends Component {
   );
 };
 
+//create the markers for the sensors together with the tooltips
 createSensorMarkers(position, reading) {
   return (
     <Marker
@@ -139,238 +135,249 @@ createSensorMarkers(position, reading) {
   );
 }
 
-createFloodAlertAreas(areas) {
+// create the flood alert(just aroud Canterbury) and the currently active alert and warning areas (England)
+createGEOjsonAreas(areas, isAlert) {
   return areas.map((el, idx) => {
-    if(idx < 9) {
+    if((idx < 9 && !isAlert) || isAlert) {
       return (
         <GeoJSON
           ref={'area' + el.features[0].properties.FWS_TACODE} // unique identifier for the ref
           key={idx + "_fla"}
           data={el}
-          style={this.stylePolFl}
-          onEachFeature={this.onEachFeature.bind(this)}
+          style={isAlert ? this.styleGEOjsonAlert : this.styleGEOjsonInfo}
+          onEachFeature={isAlert ? this.onEachFeatureAlert.bind(this) : this.onEachFeatureInfo.bind(this)}
           />);
         }
       });
     }
 
-    createCurrentAlertAreas(areas) {
-      return areas.map((el, idx) => {
-        return (
-          <GeoJSON
-            ref={'area' + el.features[0].properties.FWS_TACODE} // unique identifier for the ref
-            key={idx + "_fla"}
-            data={el}
-            style={this.stylePolCur}
-            onEachFeature={this.onEachFeature.bind(this)}
-            />);
-          });
-        }
+    onEachFeatureAlert(feature, layer) {
+      this.onEachFeature(feature, layer, true)
+    }
 
-        onEachFeature(feature, layer) {
-          layer.on({
-            mouseover: this.highlightFeature.bind(this),
-            mouseout: this.resetHighlight.bind(this)
-          });
-          if (feature.properties && feature.properties.DESCRIP) {
-            var arr1 = this.props.currentAlertAreasItems.filter(el => {
-              return el.floodAreaID == feature.properties.FWS_TACODE
-            });
-            var arr2 = this.props.floodAlertAreasItems.filter(el => {
-              return el.notation == feature.properties.FWS_TACODE
-            });
-            var txt= "";
-            if(arr1.length > 0) {
-              txt = arr1[0].description + "<br /><br />Severity: " + arr1[0].severity + "<br /> Level: " + arr1[0].severityLevel;
-            } else if(arr2.length > 0) {
-              txt = arr2[0].label;
-            }
-            layer.bindPopup(txt);
-          }
-        }
+    onEachFeatureInfo(feature, layer) {
+      this.onEachFeature(feature, layer, false)
+    }
 
-        highlightFeature(e) {
-          var layer = e.target;
-          layer.setStyle({
-            color: 'blue'
-          });
+    //sets the style and the popup content for each polygon
+    onEachFeature(feature, layer, isAlert) {
+      layer.on({
+        mouseover: isAlert ? this.highlightFeatureAlert.bind(this) : this.highlightFeatureInfo.bind(this),
+        mouseout: this.resetHighlight.bind(this)
+      });
+      if (feature.properties && feature.properties.DESCRIP) {
+        var arr1 = this.props.currentAlertAreasItems.filter(el => {
+          return el.floodAreaID == feature.properties.FWS_TACODE
+        });
+        var arr2 = this.props.floodAlertAreasItems.filter(el => {
+          return el.notation == feature.properties.FWS_TACODE
+        });
+        var txt= "";
+        if(arr1.length > 0) {
+          txt = arr1[0].description + "<br /><br />Severity: " + arr1[0].severity + "<br /> Level: " + arr1[0].severityLevel;
+        } else if(arr2.length > 0) {
+          txt = arr2[0].label;
         }
-
-        resetHighlight(e) {
-          var layer = e.target;
-          // get ref to geojson obj using the unique id which we get from the event
-          this.refs['area' + e.target.feature.properties.FWS_TACODE].leafletElement.resetStyle(layer);
-        }
-
-        stylePolFl(feature) {
-          return {
-            fillColor: "yellow",
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.3
-          };
-        }
-
-        stylePolCur(feature) {
-          return {
-            fillColor: "red",
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.3
-          };
-        }
-
-        getSubscribeFrom() {
-          return (
-              <MuiThemeProvider muiTheme={getMuiTheme()}>
-                <div style={{ padding: 15 }}>
-                  <MaterialUiForm onSubmit={this.attachLocationBeforeSubmit.bind(this)} />
-                </div>
-              </MuiThemeProvider>
-          );
-        }
-
-        attachLocationBeforeSubmit(genValues) {
-          var newValues = {
-            name: genValues.name,
-            email: genValues.email,
-            phone: genValues.phone,
-            location: {
-              lat: this.props.location[0],
-              long: this.props.location[1]
-            }
-          };
-          sendResult(newValues);
-          this.setState({
-            isSubscribeVisible: false
-          });
-          this.setState({
-            dialogOpen: true
-          });
-        }
-
-        onDialogClose() {
-          this.setState({
-            dialogOpen: false
-          });
-        }
-
-        render() {
-          const AddressSearch = withLeaflet(AddressControl);
-          const { classes } = this.props;
-          const { anchorEl } = this.state;
-          const open = Boolean(anchorEl);
-          return (
-            <Map
-              className="map"
-              minZoom="3"
-              maxZoom="19"
-              center={this.props.location}
-              zoom={this.state.zoom}
-              ref='map'
-              zoomControl={false}>
-              <ZoomControl position="topleft" />
-              <InfoDialog open={this.state.dialogOpen} onClose={this.onDialogClose.bind(this)}/>
-              <AddressSearch />
-              <LayersControl position="topright">
-                <BaseLayer checked={!this.props.isColorBlind} name="Default">
-                  <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                </BaseLayer>
-                <BaseLayer checked={this.props.isColorBlind} name="Black And White">
-                  <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png" />
-                </BaseLayer>
-                <Overlay checked name="Active Alerts in UK">
-                  <LayerGroup>
-                    {this.createCurrentAlertAreas(this.props.currentAlertAreas)}
-                  </LayerGroup>
-                </Overlay>
-                <Overlay checked name="Canterbury Flood Areas">
-                  <LayerGroup>
-                    {this.createFloodAlertAreas(this.props.floodAlertAreas)}
-                  </LayerGroup>
-                </Overlay>
-                <Overlay checked name="Sensors">
-                  <LayerGroup>
-                    <MarkerClusterGroup>
-                      {this.createSensorMarkers(sensorPositions[0], "Water E3951")}
-                      {this.createSensorMarkers(sensorPositions[1], "Water E4060")}
-                      {this.createSensorMarkers(sensorPositions[2], "Water E3966")}
-                      {this.createSensorMarkers(sensorPositions[3], "Reinfall E4080")}
-                      {this.createSensorMarkers(sensorPositions[4], "Reinfall E4090")}
-                      {this.createSensorMarkers(sensorPositions[5], this.props.sensor_f3_reading)}
-                      {this.createSensorMarkers(sensorPositions[6], this.props.sensor_45_reading)}
-                    </MarkerClusterGroup>
-                  </LayerGroup>
-                </Overlay>
-              </LayersControl>
-              <Control position="topleft" >
-                <div>
-                  <Button
-                    ref='subscribeButton'
-                    aria-owns={open ? 'Search for location first!' : undefined}
-                    aria-haspopup="true"
-                     variant="contained" color="primary" onClick={(event) => {
-                      if(this.state.marker.hasOwnProperty("options")) {
-                        this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
-                      } else {
-                        this.setState({
-                              anchorEl: event.currentTarget,
-                            });
-                      }
-                    }}>
-                    Subscribe
-                  </Button>
-                  <Popover
-                    id="simple-popper"
-                    open={open}
-                    anchorEl={anchorEl}
-                    onClose={() => {
-                      this.setState({
-                          anchorEl: null,
-                        });
-                    }}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'center',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'center',
-                    }}
-                    >
-                    <Typography className={classes.typography}>Search for location first!</Typography>
-                  </Popover>
-                </div>
-                {this.state.isSubscribeVisible && this.getSubscribeFrom()}
-              </Control>
-            </Map>
-          )
-        }
+        layer.bindPopup(txt);
       }
+    }
 
-      CustomMap.propTypes = {
-        classes: PropTypes.object.isRequired,
+    //changes the style when the mouse hoovers on the Polygon
+    highlightFeature(e, color) {
+      var layer = e.target;
+      layer.setStyle({
+        weight: 2,
+        opacity: 1,
+        color: color,
+        fillOpacity: 0.6
+      });
+    }
+
+    highlightFeatureAlert(e) {
+      this.highlightFeature(e, "red")
+    }
+
+    highlightFeatureInfo(e) {
+      this.highlightFeature(e, "blue")
+    }
+
+    //resets the highlight
+    resetHighlight(e) {
+      var layer = e.target;
+      // get ref to geojson obj using the unique id which we get from the event
+      this.refs['area' + e.target.feature.properties.FWS_TACODE].leafletElement.resetStyle(layer);
+    }
+
+    //set the style for the info polygons
+    styleGEOjsonInfo(feature) {
+      return {
+        weight: 2,
+        opacity: 1,
+        color: 'blue',
+        fillOpacity: 0.3
       };
-
-      const mapDispatchToProps = dispatch => {
-        return {
-          getLocation: location => dispatch(getLocation(location)),
-          getAreasData: areasData => dispatch(getAreasData(areasData))
-        };
+    }
+    //set the style for the alert polygons
+    styleGEOjsonAlert(feature) {
+      return {
+        weight: 2,
+        opacity: 1,
+        color: 'red',
+        fillOpacity: 0.3
       };
+    }
 
-      const mapStateToProps = state => {
-        return {
-          location: state.getMapInputReducer.location,
-          floodAlertAreasItems: state.getMapInputReducer.floodAlertAreasItems,
-          floodAlertAreas: state.getMapInputReducer.floodAlertAreas,
-          currentAlertAreasItems: state.getMapInputReducer.currentAlertAreasItems,
-          currentAlertAreas: state.getMapInputReducer.currentAlertAreas
-        };
+    //returns the subscribe form
+    getSubscribeFrom() {
+      return (
+        <MuiThemeProvider muiTheme={getMuiTheme()}>
+          <div style={{ padding: 15 }}>
+            <MaterialUiForm onSubmit={this.attachLocationBeforeSubmit.bind(this)} />
+          </div>
+        </MuiThemeProvider>
+      );
+    }
+
+    //mediator for the submit button
+    //attaches the current coordinates to the
+    //submit object
+    attachLocationBeforeSubmit(genValues) {
+      var newValues = {
+        name: genValues.name,
+        email: genValues.email,
+        phone: genValues.phone,
+        location: {
+          lat: this.props.location[0],
+          long: this.props.location[1]
+        }
       };
+      sendResult(newValues);
+      this.setState({
+        isSubscribeVisible: false
+      });
+      this.setState({
+        dialogOpen: true
+      });
+    }
 
-      export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CustomMap));
+    //close the dialog
+    onDialogClose() {
+      this.setState({
+        dialogOpen: false
+      });
+    }
+
+    //main function, which renders the custom map object
+    render() {
+      const AddressSearch = withLeaflet(AddressControl);
+      const { classes } = this.props;
+      const { anchorEl } = this.state;
+      const open = Boolean(anchorEl);
+      return (
+        <Map
+          className="map"
+          minZoom="3"
+          maxZoom="19"
+          center={this.props.location}
+          zoom={this.state.zoom}
+          ref='map'
+          zoomControl={false}>
+          <ZoomControl position="topleft" />
+          <InfoDialog open={this.state.dialogOpen} onClose={this.onDialogClose.bind(this)}/>
+          <AddressSearch />
+          <LayersControl position="topright">
+            <BaseLayer checked name="Default">
+              <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            </BaseLayer>
+            <BaseLayer name="Black And White">
+              <TileLayer attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png" />
+            </BaseLayer>
+            <Overlay checked name="Active in England">
+              <LayerGroup>
+                {this.createGEOjsonAreas(this.props.currentAlertAreas, true)}
+              </LayerGroup>
+            </Overlay>
+            <Overlay checked name="Canterbury Flood Areas">
+              <LayerGroup>
+                {this.createGEOjsonAreas(this.props.floodAlertAreas, false)}
+              </LayerGroup>
+            </Overlay>
+            <Overlay checked name="Sensors">
+              <LayerGroup>
+                <MarkerClusterGroup>
+                  {this.createSensorMarkers(sensorPositions[0], this.props.sensor_E3951_reading)}
+                  {this.createSensorMarkers(sensorPositions[1], this.props.sensor_E4060_reading)}
+                  {this.createSensorMarkers(sensorPositions[2], this.props.sensor_E3966_reading)}
+                  {this.createSensorMarkers(sensorPositions[5], this.props.sensor_f3_reading)}
+                  {this.createSensorMarkers(sensorPositions[6], this.props.sensor_45_reading)}
+                </MarkerClusterGroup>
+              </LayerGroup>
+            </Overlay>
+          </LayersControl>
+          <Control position="topleft" >
+            <div>
+              <Button
+                ref='subscribeButton'
+                aria-owns={open ? 'Search for location first!' : undefined}
+                aria-haspopup="true"
+                variant="contained" color="primary" onClick={(event) => {
+                  if(this.state.marker.hasOwnProperty("options")) {
+                    this.setState({isSubscribeVisible: !this.state.isSubscribeVisible});
+                  } else {
+                    this.setState({
+                      anchorEl: event.currentTarget,
+                    });
+                  }
+                }}>
+                Subscribe
+              </Button>
+              <Popover
+                id="simple-popper"
+                open={open}
+                anchorEl={anchorEl}
+                onClose={() => {
+                  this.setState({
+                    anchorEl: null,
+                  });
+                }}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+                >
+                <Typography className={classes.typography}>Search for location first!</Typography>
+              </Popover>
+            </div>
+            {this.state.isSubscribeVisible && this.getSubscribeFrom()}
+          </Control>
+        </Map>
+      )
+    }
+  }
+
+  CustomMap.propTypes = {
+    classes: PropTypes.object.isRequired,
+  };
+
+  const mapDispatchToProps = dispatch => {
+    return {
+      getLocation: location => dispatch(getLocation(location)),
+      getAreasData: areasData => dispatch(getAreasData(areasData))
+    };
+  };
+
+  const mapStateToProps = state => {
+    return {
+      location: state.getMapInputReducer.location,
+      floodAlertAreasItems: state.getMapInputReducer.floodAlertAreasItems,
+      floodAlertAreas: state.getMapInputReducer.floodAlertAreas,
+      currentAlertAreasItems: state.getMapInputReducer.currentAlertAreasItems,
+      currentAlertAreas: state.getMapInputReducer.currentAlertAreas
+    };
+  };
+
+  export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CustomMap));
