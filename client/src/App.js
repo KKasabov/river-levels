@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import './App.css';
 import HomePage from './pages/HomePage';
 import CurrentRiverLevelPage from './pages/CurrentRiverLevelPage';
@@ -9,13 +8,7 @@ import HistoricalDataPage from './pages/HistoricalDataPage';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
-import IconButton from '@material-ui/core/IconButton';
-import Badge from '@material-ui/core/Badge';
-import MenuIcon from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
@@ -101,7 +94,7 @@ class App extends Component {
               color="inherit"
               noWrap
             >
-              Dashboard
+              Great River Stour Condition
             </Typography>
             <Tabs value={this.state.tabIndex} onChange={this.handleChange}>
               <Tab label="Home" />
@@ -109,11 +102,6 @@ class App extends Component {
               <Tab label="Predicted River Levels" />
               <Tab label="Historical Data" />
             </Tabs>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
           </Toolbar>
         </AppBar>
         {this.state.tabIndex === 0 && <HomePage

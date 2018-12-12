@@ -1,0 +1,19 @@
+.homePageContainer {
+  margin: 0 auto;
+  margin-top: 2%;
+  text-align: center;
+}
+
+.contentContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 2%;
+}
+
+.contentContainer > .map {
+  width: 1280px;
+  height: 720px;
+  margin: 0 auto;
+  margin-top: 2%;
+}
