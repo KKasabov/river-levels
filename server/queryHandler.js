@@ -54,6 +54,16 @@ module.exports = {
       });
     });
   },
+  getEnvAgencyDataForPeriod: function(stationReference, dateFrom, dateTo) {
+    return new Promise(function(resolve, reject) {
+      var params = [stationReference, dateFrom, dateTo];
+      var sql = "SELECT timestamp, readingValue FROM ni60.envAgencyDataLog WHERE stationReference = ? AND (CAST(timestamp AS DATE) BETWEEN ? AND ?)";
+      conn.query(sql, params, function(err, result) {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+  },
   addSubscriber: function(params) {
     var sql = "INSERT INTO ni60.subscribers SET ?";
     conn.query(sql, params, function(err, result) {

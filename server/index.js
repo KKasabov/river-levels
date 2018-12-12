@@ -109,7 +109,6 @@ client.on('connect', () => {
       }
 
       //TODO handle the 300mm difference
-      //TODO distance_sensor_from_river_bed - latest_reading
       if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
         console.log('SHIIT FLOOD GET THE BOAT');
         floodAlert = true;
@@ -234,25 +233,17 @@ setInterval(function() {
 
 //example use of getLatestEnvAgencyReading
 queryHandler.getLatestEnvAgencyReading('E3966').then(result => {
-  console.log(result);
+  // console.log(result);
 }).catch((err) => setImmediate(() => {
   throw err;
 }));
 
-// getLatestData('E3826').then(result => {
-//   return result;
-// }).catch((err) => setImmediate(() => {
-//   throw err;
-// }));
-
-
-// //get the latest reading for a given sensor
-// queryHandler.getLatestLocalReading(sensor_f3).then(function(rows) {
-//   // console.log("Latest reading is " +
-//   //   rows[0].distanceToSensor + " from " + rows[0].timestamp);
-// }).catch((err) => setImmediate(() => {
-//   throw err;
-// })); // Throw async to escape the promise chain
+//exampleuse of getEnvAgencyDataForPeriod
+queryHandler.getEnvAgencyDataForPeriod('E3826','2018-12-11','2018-12-13').then(result => {
+  console.log(result);
+}).catch((err) => setImmediate(() => {
+  throw err;
+}));
 
 
 function getPolygonData(urls) {
