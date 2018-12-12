@@ -27,7 +27,7 @@ class HomePage extends Component {
             sensor_E4060_reading={this.props.sensor_E4060_reading}
             sensor_E3966_reading={this.props.sensor_E3966_reading}
           />
-          <Iframe frameborder="0" width="160px" height="380px" scrolling="no" url="https://environment.data.gov.uk/flood-widgets/widgets/widget-Kent-vertical.html" />
+          <Iframe frameborder="0" width="160px" height="380px" scrolling="no" url="https://environment.data.gov.uk/flood-widgets/widgets/widget-England-vertical.html" />
         </div>
       </div>
   );
