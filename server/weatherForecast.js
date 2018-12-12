@@ -9,7 +9,7 @@ module.exports = {
       .then(function(body) {
         body.list.forEach(forecast => {
           // some forecasts don't have rain predictions
-          if(Object.keys(forecast.rain).length !== 0) {
+          if(forecast.hasOwnProperty("rain") && Object.keys(forecast.rain).length !== 0) {
             rainData.push(forecast.rain["3h"]);
           }
         });
