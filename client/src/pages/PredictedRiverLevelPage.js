@@ -7,7 +7,7 @@ class PredictedRiverLevelPage extends Component {
 
   render() {
     return (
-      <Chart label="Rain Forecast" type="bar" for="weather"/>
+      <Chart labels={["Rain Forecast"]} type="bar" for="weather"/>
     );
   }
 }

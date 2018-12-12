@@ -7,12 +7,7 @@ class HistoricalDataPage extends Component {
   render() {
     return (
       <div className="container">
-        {this.props.sensorIds.map((sensorId, index) => {
-          return (<div className="chart" key={index}>
-            <Chart sensorId={sensorId} label={sensorId} type="line" hasDatePicker/>
-          </div>
-          );
-        })}
+        <Chart sensorIds={this.props.sensorIds} labels={this.props.sensorIds} type="line" hasDatePicker/>
       </div>
     );
   }
