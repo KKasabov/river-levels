@@ -283,7 +283,7 @@ cron.schedule('0 0 9 * * *', function() {
   }));
 });
 
-testRequest(email, lat, long) {
+function testRequest(email, lat, long) {
   request('https://environment.data.gov.uk/flood-monitoring/id/floods/?lat=' + lat + '&long=' + long + '&dist=5', {
       json: true
     }).then((data) => {
