@@ -34,6 +34,13 @@ const sensorPositions = [
   [51.280064, 1.0733199], //MQTT 45
 ];
 
+const SEVERITY_LEVEL_MEANING = [
+  "Severe Flooding, Danger to Life.",
+  "Flooding is Expected, Immediate Action Required.",
+  "Flooding is Possible, Be Prepared.",
+  "The warning is no longer in force.",
+]
+
 const { BaseLayer, Overlay } = LayersControl
 
 const styles = theme => ({
@@ -167,14 +174,17 @@ createGEOjsonAreas(areas, isAlert) {
       });
       if (feature.properties && feature.properties.DESCRIP) {
         var arr1 = this.props.currentAlertAreasItems.filter(el => {
-          return el.floodAreaID == feature.properties.FWS_TACODE
+          return el.floodAreaID == feature.properties.FWS_TACODE;
         });
         var arr2 = this.props.floodAlertAreasItems.filter(el => {
-          return el.notation == feature.properties.FWS_TACODE
+          return el.notation == feature.properties.FWS_TACODE;
         });
         var txt= "";
         if(arr1.length > 0) {
-          txt = arr1[0].description + "<br /><br />Severity: " + arr1[0].severity + "<br /> Level: " + arr1[0].severityLevel;
+          var el = arr1[0]
+          var level = el.severityLevel;
+          txt = el.description + "<br /><br />Severity: " + el.severity + "<br /> Level: " + level +
+          "<br />Meaning: " + SEVERITY_LEVEL_MEANING[level - 1];
         } else if(arr2.length > 0) {
           txt = arr2[0].label;
         }
