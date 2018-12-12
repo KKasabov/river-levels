@@ -112,12 +112,8 @@ client.on('connect', () => {
           break;
       }
 
-      //TODO handle the 300mm difference
       if (distance <= distance_sensor_from_river_bed - distance_flood_plain_from_river_bed) {
-        console.log('SHIIT FLOOD GET THE BOAT');
         floodAlert = true;
-      } else {
-        console.log('NO flood');
       }
 
       var waterLvl = distance_sensor_from_river_bed - distance;
@@ -233,8 +229,6 @@ addEnvAgencyData();
 
 //check for new EA data for each of the nearest sensors every 15 minutes
 cron.schedule('*/15 * * * *', function() {
-  var date = new Date();
-  console.log("min: " + date.getMinutes());
   addEnvAgencyData();
 });
 
