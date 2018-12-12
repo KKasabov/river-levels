@@ -138,7 +138,7 @@ class App extends Component {
             <PredictedRiverLevelPage />
           </div>
         }
-        {this.state.tabIndex === 3 && <HistoricalDataPage sensorIds={[sensor_f3, sensor_45]}/>}
+        {this.state.tabIndex === 3 && <HistoricalDataPage sensorIds={[sensor_f3, sensor_45, "E3951", "E4060", "E3966", "E3826"]}/>}
       </div>
     );
   }

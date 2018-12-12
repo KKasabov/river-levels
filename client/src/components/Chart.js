@@ -4,6 +4,8 @@ import RC2 from 'react-chartjs2';
 import 'react-dates/initialize';
 import { DateRangePicker } from 'react-dates';
 import 'react-dates/lib/css/_datepicker.css';
+import { isInclusivelyBeforeDay } from 'react-dates';
+import moment from 'moment';
 
 class Chart extends Component {
   state  = {
@@ -35,29 +37,26 @@ class Chart extends Component {
     var sensorData;
     Promise.all([
       fetch("/api/getData/" + this.props.sensorIds[0] + "/" + startDate + "/" + endDate),
-      fetch("/api/getData/" + this.props.sensorIds[1] + "/" + startDate + "/" + endDate)
+      fetch("/api/getData/" + this.props.sensorIds[1] + "/" + startDate + "/" + endDate),
+      fetch("/api/getEAData/" + this.props.sensorIds[2] + "/" + startDate + "/" + endDate),
+      fetch("/api/getEAData/" + this.props.sensorIds[3] + "/" + startDate + "/" + endDate),
+      fetch("/api/getEAData/" + this.props.sensorIds[4] + "/" + startDate + "/" + endDate),
+      fetch("/api/getEAData/" + this.props.sensorIds[5] + "/" + startDate + "/" + endDate)
     ])
-    .then(([res1, res2]) => Promise.all([res1.json(), res2.json()]))
-    .then(([res1Data, res2Data]) => {
-      // console.log(floodAreas.map(row => row.waterLevel));
-      // console.log(currentAlertAreas);
-      that.setState({ labels: [startDate, endDate], data: [res1Data.map(row => row.waterLevel), res2Data.map(row => row.waterLevel)] });
-      //sensorData.push();
+    .then(([res1, res2, res3, res4, res5, res6]) => Promise.all([res1.json(), res2.json(), res3.json(), res4.json(), res5.json(), res6.json()]))
+    .then(([res1Data, res2Data, res3Data, res4Data, res5Data, res6Data]) => {
+      that.setState({
+        labels: [startDate, endDate],
+        data: [
+          res1Data.map(row => row.waterLevel),
+          res2Data.map(row => row.waterLevel),
+          res3Data.map(row => row.readingValue),
+          res4Data.map(row => row.readingValue),
+          res5Data.map(row => row.readingValue),
+          res6Data.map(row => row.readingValue)
+        ]
+      });
     })
-    // fetch("/api/getData/" + this.props.sensorId + "/" + startDate + "/" + endDate)
-    //   .then(res => {
-    //     console.log("response");
-    //     return res.json();
-    //   })
-    //   .then(function(parsedData) {
-    //     console.log(parsedData);
-    //     let timestamp;
-    //     parsedData.forEach(row => {
-    //       timestamp = new Date(row.timestamp);
-    //       row.timestamp = [timestamp.toLocaleDateString(), timestamp.toLocaleTimeString()];
-    //     });
-    //     that.setState({ labels: parsedData.map(row => row.timestamp), data: parsedData.map(row => row.distanceToSensor) });
-    //   })
   };
 
   getWeatherData = () => {
@@ -125,7 +124,7 @@ class Chart extends Component {
         pointHoverBorderWidth: 2,
         pointRadius: 1,
         pointHitRadius: 10,
-        data: ds,
+        data: ds
       }
       chartData.datasets.push(dataset);
     })
@@ -158,7 +157,7 @@ class Chart extends Component {
           onDatesChange = {({ startDate, endDate }) => this.setState({ startDate, endDate })} // PropTypes.func.isRequired,
           focusedInput = {this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
           onFocusChange = {focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
-          isOutsideRange = {date => date.isAfter(new Date().toJSON().slice(0, 10))}
+          isOutsideRange={day => !isInclusivelyBeforeDay(day, moment())}
         />) :
         " ");
 

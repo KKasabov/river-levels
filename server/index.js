@@ -277,8 +277,10 @@ router.get("/getData/:deviceId/:startDate?/:endDate?", (req, res) => {
 
 // this is our get method
 // this method fetches all available data in our database
-router.get("/getEAData/:deviceId", (req, res) => {
-  let funCall = queryHandler.getLatestEnvAgencyReading(req.params.deviceId)
+router.get("/getEAData/:deviceId/:startDate?/:endDate?", (req, res) => {
+  let funCall = ((!req.params.startDate || !req.params.endDate) ?
+    queryHandler.getLatestEnvAgencyReading(req.params.deviceId) :
+    queryHandler.getEnvAgencyDataForPeriod(req.params.deviceId, req.params.startDate, req.params.endDate));
   funCall.then(function(rows) {
       res.json(rows);
     })
