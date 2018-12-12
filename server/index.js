@@ -132,11 +132,15 @@ client.on('connect', () => {
 });
 
 function getLatestData(stationReference) {
-  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/measures', {
+  return request('https://environment.data.gov.uk/flood-monitoring/id/stations/' + stationReference + '/readings?_sorted&_limit=1', {
       json: true
     })
     .then(function(data) {
-      return {ref: stationReference, val: data.items[0].latestReading.value};
+      return {
+        ref: stationReference,
+        datetime: data.items[0].dateTime,
+        val: data.items[0].value
+      };
     }).catch((err) => setImmediate(() => {
       throw err;
     }));
@@ -199,25 +203,47 @@ function getNearestGovStations(latitude, longitude, radius, sensorType, noOfResu
     }));
 }
 
-//NOTE EXAMPLE:
-getNearestGovStations('51.280233', '1.0789089', 5, 'level', 5)
-  .then(result => {
-    var promises = [];
-    result.map(stationReference => {
-      promises.push(getLatestData(stationReference));
-    });
-    Promise.all(promises).then(data => {
-      console.log(data);
-    })
-  }).catch((err) => setImmediate(() => {
-    throw err;
-  }));
+function addEnvAgencyData() {
+  getNearestGovStations('51.280233', '1.0789089', 5, 'level', 5)
+    .then(result => {
+      nearestStations = result;
+      var promises = [];
+      result.map(stationReference => {
+        promises.push(getLatestData(stationReference));
+      });
+      Promise.all(promises).then(data => {
+        for (var i = 0; i < data.length; i++) {
+          var params = {
+            timestamp: data[i].datetime,
+            stationReference: data[i].ref,
+            readingValue: data[i].val * 1000
+          };
+          queryHandler.insertEnvAgencyDataRecord(params);
+        }
+      })
+    }).catch((err) => setImmediate(() => {
+      throw err;
+    }));
+}
 
-getLatestData('E3826').then(result => {
-  return result;
+addEnvAgencyData();
+//check for new EA data for each of the nearest sensors every 16 minutes
+setInterval(function() {
+  addEnvAgencyData();
+}, 16 * 60 * 1000);
+
+//example use of getLatestEnvAgencyReading
+queryHandler.getLatestEnvAgencyReading('E3966').then(result => {
+  console.log(result);
 }).catch((err) => setImmediate(() => {
   throw err;
 }));
+
+// getLatestData('E3826').then(result => {
+//   return result;
+// }).catch((err) => setImmediate(() => {
+//   throw err;
+// }));
 
 
 // //get the latest reading for a given sensor
@@ -227,6 +253,7 @@ getLatestData('E3826').then(result => {
 // }).catch((err) => setImmediate(() => {
 //   throw err;
 // })); // Throw async to escape the promise chain
+
 
 function getPolygonData(urls) {
   let polygonCoordinates = [];
