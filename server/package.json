@@ -16,9 +16,11 @@
     "mqtt": "^2.18.8",
     "mysql": "^2.16.0",
     "nexmo": "^2.4.0",
+    "node-cron": "^2.0.3",
     "nodemailer": "^4.7.0",
     "request": "^2.88.0",
-    "request-promise": "^4.2.2"
+    "request-promise": "^4.2.2",
+    "string-builder": "^0.1.6"
   },
   "devDependencies": {
     "nodemon": "^1.18.7"

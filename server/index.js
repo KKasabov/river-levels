@@ -2,19 +2,23 @@
 const request = require('request-promise');
 const mqtt = require('mqtt');
 const express = require('express');
+const Nexmo = require('nexmo');
+const cron = require("node-cron");
+const StringBuilder = require("string-builder");
 const app = express();
-const API_PORT = 8080;
 const router = express.Router();
+const API_PORT = 8080;
 const sensor_f3 = "lairdc0ee4000010109f3"; //The sensor with id 'lairdc0ee4000010109f3'
+const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001012345'
 const distance_sensor_from_river_bed_sensor_f3 = 1820;
 const distance_flood_plain_from_river_bed_sensor_f3 = 1820;
-const sensor_45 = "lairdc0ee400001012345"; //The sensor with id 'lairdc0ee400001012345'
 const distance_sensor_from_river_bed_sensor_45 = 1340;
 const distance_flood_plain_from_river_bed_sensor_45 = 1200;
-const Nexmo = require('nexmo');
 
-const SUBSCRIBE_EMAIL_TEXT = "Hello!<br /><br />Thanks for subscribing to the email flood alerts and warnings!"
-const SUBSCRIBE_SMS_TEXT = "Hello!\n\nThanks for subscribing to the SMS flood alerts and warnings!\n\n"
+const SUBSCRIBE_EMAIL_TEXT = "Hello!<br /><br />Thanks for subscribing to the email flood alerts and warnings!" +
+" Daily emails at 9am will be sent, containig updates about flood alerts and warning for a 5km radius!<br /><br /><br /> Stay dry,<br />floodalertskentuk"
+const SUBSCRIBE_SMS_TEXT = "Hello!\n\nThanks for subscribing to the SMS flood alerts and warnings!\n\n" +
+"You will receive daily SMS update at 9am about flood alerts and warning for a 5km radius!\n\nStay dry!"
 
 var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
@@ -226,10 +230,64 @@ function addEnvAgencyData() {
 }
 
 addEnvAgencyData();
-//check for new EA data for each of the nearest sensors every 16 minutes
-setInterval(function() {
+
+//check for new EA data for each of the nearest sensors every 15 minutes
+cron.schedule('*/15 * * * *', function() {
+  var date = new Date();
+  console.log("min: " + date.getMinutes());
   addEnvAgencyData();
-}, 16 * 60 * 1000);
+});
+
+//running subscribe check every day at 9 am
+cron.schedule('0 0 9 * * *', function() {
+  queryHandler.getSubscribers().then(result => {
+    var i, lat, long, phone, email;
+    for(i = 0; i < result.length; i++) {
+      lat = result[i].latitude;
+      long = result[i].longitude;
+      email = result[i].email;
+      phone = result[i].contactNumber;
+      request('https://environment.data.gov.uk/flood-monitoring/id/floods/?lat=' + lat + '&long=' + long + '&dist=5', {
+          json: true
+        }).then((data) => {
+          var a;
+          var items = data.items;
+          let txt = new StringBuilder();
+          txt.append("Hello!<br /><br />");
+          txt.append("This is your daily update about alerts and warning in a 5km radius from your location.<br /><br />");
+          if(items.length > 0) {
+            for(a = 0; a < items.length; a++) {
+              txt.append("Description: ")
+              txt.append(items[a].description);
+              txt.append("<br /><br />")
+              txt.append("Message: ")
+              txt.append(items[a].message);
+              txt.append("<br /><br />")
+              txt.append("Severity: ")
+              txt.append(items[a].severity);
+              txt.append("<br /><br />")
+              txt.append("Severity Level: ")
+              txt.append(items[a].severityLevel);
+              txt.append("<br /><br /><br />")
+            }
+          } else {
+            txt.append("No alerts or warning around you!<br /><br />");
+          }
+          txt.append("Stay dry,<br />floodalertskentuk");
+          if(phone !== null) {
+            sendEmail(email, "Flood Alerts And Warning", txt.toString());
+          }
+          if(email !== null) {
+            sendSMS(phone, txt.toString());
+          }
+        }).catch((err) => setImmediate(() => {
+          throw err;
+        }));
+    }
+  }).catch((err) => setImmediate(() => {
+    throw err;
+  }));
+});
 
 //example use of getLatestEnvAgencyReading
 queryHandler.getLatestEnvAgencyReading('E3966').then(result => {
@@ -291,12 +349,12 @@ router.get("/getEAData/:deviceId/:startDate?/:endDate?", (req, res) => {
 
 router.post("/subscribe", (req, res, next) => {
   console.log(req.body);
-  // if(req.body.hasOwnProperty("email")) {
-  //   sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
-  // }
-  // if(req.body.hasOwnProperty("phone")) {
-  //   sendSMS(req.body.phone, SUBSCRIBE_SMS_TEXT);
-  // }
+  if(req.body.hasOwnProperty("email")) {
+    sendEmail(req.body.email, "Subscription", SUBSCRIBE_EMAIL_TEXT);
+  }
+  if(req.body.hasOwnProperty("phone")) {
+    sendSMS(req.body.phone, SUBSCRIBE_SMS_TEXT);
+  }
 
   var params = {
     latitude: req.body.location.lat,
@@ -308,8 +366,6 @@ router.post("/subscribe", (req, res, next) => {
   };
 
   queryHandler.addSubscriber(params);
-
-  //TODO figure out what to do with the location coordinates
 
   // sendSMS(447424124***, "text"); works only with pre-verified numbers, since it is a trial
   // sendEmail("d**@kent.ac.uk", "subject", "htmlContent");
