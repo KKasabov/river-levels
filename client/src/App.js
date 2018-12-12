@@ -45,7 +45,6 @@ class App extends Component {
   };
 
   getSensorReading(deviceName) {
-    var that = this;
     let deviceId, route;
     route = "/api/getData/";
     if(deviceName === 'sensor_f3') {
@@ -54,18 +53,20 @@ class App extends Component {
       deviceId = sensor_45;
     } else {
       deviceId = deviceName;
-      route = "/api/getEAData/"
+      route = "/api/getEAData/";
     }
-    fetch(route + deviceName)
+
+    fetch(route + deviceId)
       .then(res => {
         return res.json();
       })
       .then(function(parsedData) {
-        console.log(parsedData);
-        let a = deviceName + "_reading";
-        console.log(a);
-          that.setState({a: parsedData[0].readingValue});
-      })
+        if(route === "/api/getEAData/") {
+          this.setState({[deviceName + "_reading"]: parsedData[0].readingValue});
+        } else {
+          this.setState({[deviceName + "_reading"]: parsedData[0].waterLevel});
+        }
+      }.bind(this))
   }
 
   componentDidMount() {
@@ -118,9 +119,9 @@ class App extends Component {
         {this.state.tabIndex === 0 && <HomePage
            sensor_f3_reading={this.state.sensor_f3_reading}
            sensor_45_reading={this.state.sensor_45_reading}
-           sensor_E3951_reading={this.state.sensor_E3951_reading}
-           sensor_E4060_reading={this.state.sensor_E4060_reading}
-           sensor_E3966_reading={this.state.sensor_E3966_reading}
+           sensor_E3951_reading={this.state.E3951_reading}
+           sensor_E4060_reading={this.state.E4060_reading}
+           sensor_E3966_reading={this.state.E3966_reading}
            />}
         {this.state.tabIndex === 1 &&
           <div>
