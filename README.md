@@ -1,5 +1,3 @@
-This is a web application that consumes data about the level of the Great River Stour in Cantebrury provided by a number of sensors and presents that in a useful manner to the user.
-
 **PROJECT STRUCTURE AND LIBRARIES**
 
 The web application uses React for the front-end and a Node Express app for the back-end.
